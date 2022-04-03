@@ -39,6 +39,8 @@ local notation `∥` e `∥` := point_norm e
 def grid_idx := ℤ × ℤ
 instance : has_add grid_idx :=
   ⟨λ p₁ p₂, (p₁.1 + p₂.1, p₁.2 + p₂.2)⟩
+instance : has_repr grid_idx :=
+  ⟨λ p, "(" ++ (repr p.1) ++ ", " ++ (repr p.2) ++ ")"⟩
 
 
 def point_hash : point → ℕ
@@ -47,6 +49,17 @@ def point_hash : point → ℕ
 #eval point_hash (1, 4)
 
 def grid_2D := hash_map grid_idx (λ _, list point)
+
+-- Lean won't let us define the overlapping instance here, since there's already
+-- an instance for sigma types generally.
+-- instance : has_repr (Σ (a : grid_idx), list point) :=
+--  ⟨λ p, ""⟩
+instance : has_repr grid_2D :=
+  ⟨λ g, "[" ++ (g.entries.map
+    (λ (p : Σ (a : grid_idx), list point),
+      (" {" ++ repr p.1 ++ ": " ++ repr p.2 ++ "} ").to_list)).join.as_string ++ "]"⟩
+
+#check list
 
 def get_bucket_idx (p : point) (C : ℕ) : (ℤ × ℤ) :=
   (p.1 / C, p.2 / C)
@@ -69,7 +82,6 @@ def test_points : list point :=
   [(0, 0), (2, 2)]
 
 #check (grid_points 3 (by simp) test_points).entries
--- def grid_points : list (Σ (_ : point), list point)
 
 def min_dist_point_aux : list (point × ℚ) → option (point × ℚ)
 | [] := none
@@ -108,12 +120,8 @@ def aux
       | (some l) := l.map (λ q, (q, ∥ p - q ∥))
       end
     ) in
-    -- let point_dist_pairs := point_dist_pair_lists.join.filter (λ qd, qd.1 ≠ p) in
-    let point_dist_pairs := point_dist_pair_lists.join in
-    -- let _ := (by trace (repr point_dist_pairs)) in
-    trace (repr p) $
-    trace (repr bucket_idx) $
-    trace (repr point_dist_pairs) $
+    let point_dist_pairs := point_dist_pair_lists.join.filter
+      (λ qd, qd.1 ≠ p) in
     let curr_res :=
       match min_dist_point point_dist_pairs with
       | some q := some (p, q)
@@ -147,11 +155,8 @@ def find_closest_pair
   )
 
 
-
--- def test_points : list point :=
---   [(0, 0), (2, 2)]
-
-#eval find_closest_pair 2 (by simp) test_points
+#eval find_closest_pair 7 (by simp) test_points
+#eval find_closest_pair 8 (by simp) test_points
 
 -- def hash_map_test : hash_map (ℚ × ℚ) (λ _, list point) :=
 --   let res := mk_hash_map {point} {λ _, list point} point_hash 31 in
