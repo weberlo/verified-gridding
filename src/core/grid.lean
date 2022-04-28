@@ -16,8 +16,8 @@ instance : has_repr grid_idx :=
 
 structure grid_2D :=
   (data : hash_map grid_idx (λ _, list point))
-  (C : ℕ)
-  (C_nonzero : C > 0)
+  (c : ℕ)
+  (c_nonzero : c > 0)
 
 -- def grid_2D := hash_map grid_idx (λ _, list point)
 
@@ -35,19 +35,19 @@ def get_grid_idx (p : point) (C : ℕ) : grid_idx :=
   (p.1 / C, p.2 / C)
 
 -- `C` is an upper bound on the closest pair distance.
-def grid_points (C : ℕ) (C_nonzero : C > 0) : list point → grid_2D
+def grid_points (c : ℕ) (c_nonzero : c > 0) : list point → grid_2D
 -- TODO need to update this function to return a structure, rather than just the hash map for the grid.
-| [] := ⟨mk_hash_map point_hash, C, C_nonzero⟩
+| [] := ⟨mk_hash_map point_hash, c, c_nonzero⟩
 | (x :: xs) :=
     let g := grid_points xs in
     -- TODO could just use `g.modify`
-    let grid_idx := get_grid_idx x C in
+    let grid_idx := get_grid_idx x c in
     let l := match g.data.find grid_idx with
       | none := []
       | some l' := l'
       end
     in
-    ⟨g.data.insert grid_idx (x :: l), C, C_nonzero⟩
+    ⟨g.data.insert grid_idx (x :: l), c, c_nonzero⟩
 
 def test_points : list point :=
   [(0, 0), (2, 2)]
@@ -68,23 +68,29 @@ def get_neighbs (p : point) (g : grid_2D) (bucket_idx : ℤ × ℤ) : list point
     | (some l) := l
     end)).join.filter (λ q, q ≠ p)
 
+
+
+/-
+  Theorems and Lemmas
+-/
+
 theorem close_in_grid_means_close_in_space :
   ∀ (p₁ p₂ : point) (a b : grid_idx) (G : grid_2D) (l₁ l₂ : list point),
-  (a = get_grid_idx p₁ G.C) →
-  (b = get_grid_idx p₂ G.C) →
+  (a = get_grid_idx p₁ G.c) →
+  (b = get_grid_idx p₂ G.c) →
   (a ∈ G.data.keys) →
   (b ∈ G.data.keys) →
   (G.data.find a = some l₁) →
   (G.data.find b = some l₂) →
   (p₁ ∈ l₁) →
   (p₂ ∈ l₂) →
-  ∥ p₁ - p₂ ∥ ≤ G.C * G.C * (∥ a - b ∥ + ∥ (1, 1) ∥)
+  ∥ p₁ - p₂ ∥ ≤ G.c * G.c * (∥ a - b ∥ + ∥ (1, 1) ∥)
   := begin
     intros p₁ p₂ a b G l₁ l₂ a_p₁ b_p₂ a_in_G b_in_G a_has_elts b_has_elts p_in_a₁ b_in_a₂,
     unfold get_grid_idx at a_p₁,
     unfold get_grid_idx at b_p₂,
-    rw [int.distrib_left (G.C * G.C) ∥a - b∥ ∥(1, 1)∥],
-    have h : (↑(G.C * G.C) * ∥a - b∥ = ∥p₁ - p₂∥) :=
+    rw [int.distrib_left (G.c * G.c) ∥a - b∥ ∥(1, 1)∥],
+    have h : (↑(G.c * G.c) * ∥a - b∥ = ∥p₁ - p₂∥) :=
     begin
       rw [a_p₁, b_p₂],
       unfold point_norm,
@@ -121,13 +127,13 @@ theorem close_in_grid_means_close_in_space :
           rw [reassoc],
           rw [reassoc],
       end,
-      rw [unfold_x_sub_y (p₁.fst / ↑(G.C)) ((p₂.fst / ↑(G.C)))],
-      rw [int.distrib_left (p₁.fst / ↑(G.C) - p₂.fst / ↑(G.C)) (p₁.fst / ↑(G.C)) (-(p₂.fst / ↑(G.C)))],
+      rw [unfold_x_sub_y (p₁.fst / ↑(G.c)) ((p₂.fst / ↑(G.c)))],
+      rw [int.distrib_left (p₁.fst / ↑(G.c) - p₂.fst / ↑(G.c)) (p₁.fst / ↑(G.c)) (-(p₂.fst / ↑(G.c)))],
       sorry
     end,
     rw h,
     simp [point_norm],
-    apply (nonneg_iff_leq_zero (↑(G.C) * (1 + 1))).mp,
+    apply (nonneg_iff_leq_zero (↑(G.c) * (1 + 1))).mp,
     apply a_nonneg_times_b_nonneq_means_a_times_b_nonneg,
     apply lift_nat_nonneg,
     simp [int.nonneg],

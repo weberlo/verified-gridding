@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{doobs}
+\usepackage{mathpartir}
+\usepackage{minted}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.3pt]}]
+
+\begin{document}
+
+\title{%
+  Final Project Report
+  \\[0.5em]
+  \large Geometric Computing \\
+}
+
+\author{
+Logan Weber\\
+loganweb@mit.edu
+}
+
+\def\aSigma{\overline{\Sigma}}
+\def\asigma{\overline{\sigma}}
+\def\aheap{\overline{h}}
+
+\date{}
+
+\maketitle
+
+\begin{align*}
+  \| (k - 1, k-1) \|_2^2 &\leq 1 \\
+  (k-1)^2 + (k-1)^2 & \leq 1 \\
+  2(k^2 - 2k + 1) &\leq 1 \\
+  \frac{1}{2}(2(k^2 - 2k + 1)) &\leq \frac{1}{2} \\
+  k^2 - 2k + 1 &\leq 0
+\end{align*}
+The only integral solution is 1.
+
+Solution: $k=1$
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
