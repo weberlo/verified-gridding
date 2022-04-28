@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{doobs}
+\usepackage{mathpartir}
+\usepackage{minted}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.3pt]}]
+
+\begin{document}
+
+\title{%
+  Project Proposal
+  \\[0.5em]
+  \large Geometric Computing \\
+}
+
+\author{
+Logan Weber\\
+loganweb@mit.edu
+}
+
+\def\aSigma{\overline{\Sigma}}
+\def\asigma{\overline{\sigma}}
+\def\aheap{\overline{h}}
+
+\date{}
+
+\maketitle
+
+The Lean proof assistant and programming language has made waves in the math community in recent years as an attractive platform for formalizing mathematics.
+% It has learned from the lessons of past proof assistants and its community has worked directly with mathematicians to aid them in formalizing their work.
+Consequently, many undergraduate-level theorems in math have been formalized in Lean, and they have been collected into a single library, Mathlib.
+
+This project will be a case study in formally verifying geometric algorithms in Lean, and we will leverage theorems in Mathlib as much as possible.
+Formal verification is considered by many to be an arduous process, and we aim to challenge this assumption and assess the level of abstraction that proofs can be expressed at in a modern theorem proving environment.
+% We aim to exploit Mathlib to lower the high proof burden often considered inescapable in formal verification.
+
+Concretely, we seek to implement and formally verify the following algorithms:
+\begin{itemize}
+  \item The gridding-based algorithm for closest pair with help
+  \item The gridding-based algorithm for finding helper $t$ for closest pair
+  \item \textbf{(Stretch Goal)} Recursive, incremental LP solver
+\end{itemize}
+The Mathlib modules we suspect to find use for are:
+\begin{itemize}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/data/hash_map.html}{Hash Map}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/data/rat/basic.html}{Rationals}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/geometry/euclidean/basic.html}{Euclidean Geometry}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/topology/metric_space/basic.html#metric.ball}{Metric Space}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/analysis/convex/basic.html#convex_hyperplane}{Convex Analysis}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/analysis/normed/group/basic.html}{Normed Groups}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/analysis/normed_space/basic.html}{Normed Spaces}
+  \item \href{https://leanprover-community.github.io/mathlib_docs/analysis/normed_space/lp_space.html}{$\ell_p$ Space}
+\end{itemize}
+In order to compute with the functions we define, we cannot use $\R$ to represent points, since Lean does not provide a data type for computable approximations of the reals.
+Instead, we use $\Q$ as our carrier type, and we survey the challenges in doing so.
+For example, $\| \cdot \|_2$ computes the square root, which takes, e.g., $2 \in \Q$ to $\sqrt{2} \in \R$, so we can't use $\| \cdot \|_2$ as a norm.
+% There are likely other difficulties we haven't anticipated,
+Our writeup will include commentary on the concessions of this flavor that are forced by modern proof assistants.
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
