@@ -24,26 +24,26 @@ def min_dist_point : list (point × ℚ) → option point
 | [] := none
 | pds := min_dist_point_aux pds >>= (λ (p : point × ℚ), some p.1)
 
-lemma min_dist_point_finds_min :
-  ∀ (pds : list (point × ℚ)),
-    pds = [] ∨
-    (∃ (p : (point × ℚ)),
-      pds.mem p ∧
-      min_dist_point pds = p.1 ∧
-      ∀ (q : (point × ℚ)),
-        pds.mem q → p.2 < q.2)
-:=
-begin
-  intros pds,
-  cases pds,
-    apply or.inl,
-    refl,
-  apply or.inr,
-  apply exists.intro,
-  -- I get the feeling that we're not going about proving existentials
-  -- correctly.  Look up some examples in Lean.
-  sorry
-end
+-- lemma min_dist_point_finds_min :
+--   ∀ (pds : list (point × ℚ)),
+--     pds = [] ∨
+--     (∃ (p : (point × ℚ)),
+--       pds.mem p ∧
+--       min_dist_point pds = p.1 ∧
+--       ∀ (q : (point × ℚ)),
+--         pds.mem q → p.2 < q.2)
+-- :=
+-- begin
+--   intros pds,
+--   cases pds,
+--     apply or.inl,
+--     refl,
+--   apply or.inr,
+--   apply exists.intro,
+--   -- I get the feeling that we're not going about proving existentials
+--   -- correctly.  Look up some examples in Lean.
+--   sorry
+-- end
 
 
 /-
@@ -56,22 +56,44 @@ end
 --     let N := get_neighbs p g bucket_idx in
 --     ∀ n ∈ N, ∥ n - p ∥ ≤ g.t
 
+def get_min_dist_point_in_neighbs (p : point) (g : grid_2D) : option (point × point) :=
+    let N := get_neighbs p g in
+    let point_dist_pairs : list (point × ℚ) := N.map (λ q, (q, ∥ p - q ∥)) in
+    match min_dist_point point_dist_pairs with
+    | some q := some (p, q)
+    | none := none
+    end
 
-def aux
-  (c : ℕ)
-  (c_nonzero : c > 0)
-  (g : grid_2D) : list point → option (point × point)
+
+lemma get_neighbs_contains_all_within_ball :
+  ∀ (c : ℕ) (c_nonzero : c > 0) (ps : list point) (p q : point) (g : grid_2D),
+    (∥ p - q ∥ ≤ c) → (q ∈ get_neighbs p g) := begin
+  sorry
+end
+
+lemma get_min_dist_point_in_neighbs_correct :
+  ∀ (p q : point) (g : grid_2D),
+    ∥ p - q ∥ ≤ g.c →
+      ∃ (x : point),
+        get_min_dist_point_in_neighbs p g = some (x, p) ∧
+        ∥ p - x ∥ ≤ ∥ p - q ∥ := begin
+  sorry
+end
+
+
+def aux (g : grid_2D) : list point → option (point × point)
 | [] := none
 | (p :: ps) :=
     let rec_res := aux ps in
-    let N := get_neighbs p g in
-    let point_dist_pairs : list (point × ℚ) := N.map (λ q, (q, ∥ p - q ∥)) in
-    let curr_res :=
-      match min_dist_point point_dist_pairs with
-      | some q := some (p, q)
-      | none := none
-      end
-    in
+    -- let N := get_neighbs p g in
+    -- let point_dist_pairs : list (point × ℚ) := N.map (λ q, (q, ∥ p - q ∥)) in
+    -- let curr_res :=
+    --   match min_dist_point point_dist_pairs with
+    --   | some q := some (p, q)
+    --   | none := none
+    --   end
+    -- in
+    let curr_res := get_min_dist_point_in_neighbs p g in
     match (curr_res, rec_res) with
     | (some _, none) := curr_res
     | (none, some _) := rec_res
@@ -82,6 +104,7 @@ def aux
     | (none, none) := none
 end
 
+
 /-
 We can only get `none` if `c` wasn't actually a valid hint.
 -/
@@ -91,7 +114,7 @@ def find_closest_pair
   (points : list point)
   : option (point × point) :=
   let g := grid_points c c_nonzero points in
-  aux c c_nonzero g points >>= (
+  aux g points >>= (
     λ pq : point × point,
       if ∥ pq.1 - pq.2 ∥ > c
       then none
@@ -139,12 +162,10 @@ lemma two_closest_pairs_implies_same :
 
   by_cases xy_lt_zw : ∥ x - y ∥ < ∥ z - w ∥;
   by_cases zw_lt_xy : ∥ z - w ∥ < ∥ x - y ∥,
-
   /-
     Case (∥x - y∥ < ∥z - w∥) ∧ (∥z - w∥ < ∥x - y∥)
   -/
   exact false.elim ((not_x_lt_y_and_gt_y (∥ x - y ∥) (∥ z - w ∥)) ⟨xy_lt_zw, zw_lt_xy⟩),
-
   /-
     Case (∥x - y∥ < ∥z - w∥) ∧ ¬(∥z - w∥ < ∥x - y∥)
   -/
@@ -164,7 +185,6 @@ lemma two_closest_pairs_implies_same :
     exact ((sep_zw x y).right.mp xy_neq_zw')
   end,
   contradiction,
-
   /-
     Case ¬(∥x - y∥ < ∥z - w∥) ∧ (∥z - w∥ < ∥x - y∥)
   -/
@@ -184,7 +204,6 @@ lemma two_closest_pairs_implies_same :
     exact ((sep_xy z w).right.mp xy_neq_zw')
   end,
   contradiction,
-
   /-
     Case ¬(∥x - y∥ < ∥z - w∥) ∧ ¬(∥z - w∥ < ∥x - y∥)
   -/
@@ -203,20 +222,122 @@ begin
   sorry
 end
 
+lemma exists_q_in_range_implies_aux_finds_it:
+  ∀ (q : point) (qs' : list point) (ps : list point) (c : ℕ) (c_nonzero : c > 0),
+    (∃ (p : point), p ∈ ps ∧ ∥p - q∥ ≤ ↑c) →
+    (∃ (x y : point),
+      aux (grid_points c c_nonzero ps) (q :: qs') = some (x, y) ∧
+      ∀ (p : point),
+        p ∈ ps →
+        ∥p - q∥ ≤ ↑c →
+        ∥x - y∥ ≤ ∥p - q∥) := begin
+  sorry
+end
 
-inductive closest_pair_in_balls (c : ℕ) (c_nonzero : c > 0) (ps : list point) :
-  point → point → list point → Prop
-| no_ball (x y : point) : closest_pair_in_balls x y []
-| succ_ball (x y : point) (p : point) (ps' : list point) :
-    (∀ (q r : point),
-        q ∈ ps → r ∈ ps →
-        ∥ q - p ∥ ≤ c →
-        ∥ r - p ∥ ≤ c →
-        (∥ x - y ∥ ≤ ∥ q - p ∥ ∧
-         ∥ x - y ∥ ≤ ∥ r - p ∥)) →
-    closest_pair_in_balls x y ps' →
-    closest_pair_in_balls x y (p :: ps')
 
+inductive closest_pair_in_balls (c : ℕ) (c_nonzero : c > 0) (qs : list point) :
+  option (point × point) → list point → Prop
+| no_ball (xy : option (point × point)) : closest_pair_in_balls xy []
+| succ_ball (xy : option (point × point)) (p : point) (ps' : list point) :
+    ((∃ (q : point), q ∈ qs ∧ ∥ q - p ∥ ≤ c) → -- TODO should this be iff?
+      ∃ (x y : point),
+        xy = some (x, y) ∧
+        (∀ (q : point),
+            q ∈ qs →
+            ∥ q - p ∥ ≤ c →
+            ∥ x - y ∥ ≤ ∥ q - p ∥)) →
+    closest_pair_in_balls xy ps' →
+    closest_pair_in_balls xy (p :: ps')
+
+
+lemma aux_monotonic_in_pt_list :
+  ∀ (c : ℕ) (c_nonzero : c > 0) (qs : list point) (p : point) (ps : list point),
+    ∃ (xy zw : option (point × point)),
+      (xy = aux (grid_points c c_nonzero ps) ps) ∧
+      (zw = aux (grid_points c c_nonzero ps) (p :: ps)) ∧
+      match (xy, zw) with
+      | (none, none) := true
+      | (some xy', none) := false
+      | (none, some zw') := true
+      | (some xy', some zw') := ∥ zw'.1 - zw'.2 ∥ ≤ ∥ xy'.1 - xy'.2 ∥
+      end := begin
+  sorry,
+end
+
+
+lemma closest_pair_monotonic_in_pt_list :
+  ∀ (c : ℕ) (c_nonzero : c > 0) (qs : list point) (p : point) (ps' : list point),
+    (closest_pair_in_balls c c_nonzero qs (aux (grid_points c c_nonzero qs) ps') ps') →
+    (closest_pair_in_balls c c_nonzero qs (aux (grid_points c c_nonzero qs) (p :: ps')) ps') := begin
+  intros c c_nonzero qs p ps' cp_aux_ps'_for_ps',
+
+  cases cp_aux_ps'_for_ps',
+
+  apply closest_pair_in_balls.no_ball,
+
+  rename [cp_aux_ps'_for_ps'_p → p', cp_aux_ps'_for_ps'_ps' → ps'],
+  apply closest_pair_in_balls.succ_ball,
+
+  sorry,
+
+
+
+
+  -- cases ps',
+
+  -- apply closest_pair_in_balls.no_ball,
+
+  -- apply closest_pair_in_balls.succ_ball,
+
+  -- sorry,
+
+  -- cases cp_aux_ps'_for_ps',
+
+
+end
+
+
+lemma aux_finds_closest_pair_in_balls:
+  ∀ (c : ℕ) (c_nonzero : c > 0) (qs : list point),
+    -- If all points are at least distance 1 from each other
+    (∀ (p q : point), p ∈ qs → q ∈ qs → ∥ p - q ∥ > 1) →
+    -- and there's a closest pair within distance `c`
+    (∃ (p q : point),
+      (closest_pair p q qs) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
+    (∀ (ps : list point),
+       closest_pair_in_balls c c_nonzero qs (aux (grid_points c c_nonzero qs) ps) ps) := begin
+
+  intros c c_nonzero qs all_pts_dist_gt_one exists_pair ps,
+
+  induction ps,
+
+  apply closest_pair_in_balls.no_ball,
+
+  -- Case ps = ps_hd :: ps_tl
+  apply closest_pair_in_balls.succ_ball,
+
+  intros exists_q_in_range_in_qs,
+
+  apply exists_q_in_range_implies_aux_finds_it,
+  assumption,
+
+  -- simp [aux],
+  cases (aux (grid_points c c_nonzero qs) ps_tl);
+  cases (aux (grid_points c c_nonzero qs) (ps_hd :: ps_tl)),
+
+  assumption,
+
+  cases ps_ih,
+  apply closest_pair_in_balls.no_ball,
+
+  -- rename []
+  -- TODO seems like we should be able to reason through the definition at this
+  -- point.  But maybe we want some kind of lemma...
+  sorry,
+
+  sorry,
+
+end
 
 
 lemma aux_gives_closest_pair:
@@ -248,6 +369,8 @@ lemma aux_gives_closest_pair:
   contradiction,
 
   simp [aux],
+
+  sorry,
 
 end
 
