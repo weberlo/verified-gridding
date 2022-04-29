@@ -2,6 +2,7 @@ import data.hash_map
 import algebra.ring.basic
 import data.int.basic
 import data.nat.basic
+import data.int.sqrt
 
 import core.point
 
@@ -18,6 +19,7 @@ structure grid_2D :=
   (data : hash_map grid_idx (λ _, list point))
   (c : ℕ)
   (c_nonzero : c > 0)
+  (ps : list point)
 
 -- def grid_2D := hash_map grid_idx (λ _, list point)
 
@@ -31,42 +33,58 @@ instance : has_repr grid_2D :=
       (" {" ++ repr p.1 ++ ": " ++ repr p.2 ++ "} ").to_list)).join.as_string ++ "]"⟩
 
 
-def get_grid_idx (p : point) (C : ℕ) : grid_idx :=
-  (p.1 / C, p.2 / C)
+-- def get_grid_idx (p : point) (C : ℕ) : grid_idx :=
+--   (p.1 / C, p.2 / C)
+def get_grid_idx (p : point) : grid_idx :=
+  (p.1, p.2)
 
 -- `C` is an upper bound on the closest pair distance.
 def grid_points (c : ℕ) (c_nonzero : c > 0) : list point → grid_2D
 -- TODO need to update this function to return a structure, rather than just the hash map for the grid.
-| [] := ⟨mk_hash_map point_hash, c, c_nonzero⟩
+| [] := ⟨mk_hash_map point_hash, c, c_nonzero, []⟩
 | (x :: xs) :=
     let g := grid_points xs in
     -- TODO could just use `g.modify`
-    let grid_idx := get_grid_idx x c in
+    let grid_idx := get_grid_idx x in
     let l := match g.data.find grid_idx with
       | none := []
       | some l' := l'
       end
     in
-    ⟨g.data.insert grid_idx (x :: l), c, c_nonzero⟩
+    ⟨g.data.insert grid_idx (x :: l), c, c_nonzero, x :: g.ps⟩
 
-def test_points : list point :=
-  [(0, 0), (2, 2)]
+#check (grid_points 3 (by simp) [(0, 0), (2, 2)]).data.entries
 
-#check (grid_points 3 (by simp) test_points).data.entries
-
-def get_neighbs (p : point) (g : grid_2D) (bucket_idx : ℤ × ℤ) : list point :=
+def get_neighbs (p : point) (g : grid_2D) : list point :=
+  let grid_idx := get_grid_idx p in
+  let bound := nat.sqrt g.c + 1 in
   let kernel : list (ℤ × ℤ) :=
-    [
-      (-1, 1), (0, 1), (1, 1),
-      (-1, 0), (0, 0), (1, 0),
-      (-1, -1), (0, -1), (1, -1)
-    ]
-  in
+    (do
+        j <- list.range (2 * bound + 1),
+        return (do
+          i <- list.range (2 * bound + 1),
+          return (-(bound : ℤ) + i, -(bound : ℤ) + j))).join in
+  -- let kernel : list (ℤ × ℤ) :=
+  --   [
+  --     (-1, 1), (0, 1), (1, 1),
+  --     (-1, 0), (0, 0), (1, 0),
+  --     (-1, -1), (0, -1), (1, -1)
+  --   ]
+  -- in
   (kernel.map (λ offs,
-    match (g.data.find (bucket_idx + offs)) with
+    match (g.data.find (grid_idx + offs)) with
     | none := []
     | (some l) := l
     end)).join.filter (λ q, q ≠ p)
+
+
+lemma get_neighbs_gets_neighbs :
+  ∀ (p : point) (g : grid_2D),
+    ∀ (q : point),
+      (q ∈ g.ps ∧ ∥ p - q ∥ ≤ g.c) → (q ∈ get_neighbs p g) :=
+begin
+  sorry
+end
 
 
 
@@ -76,8 +94,8 @@ def get_neighbs (p : point) (g : grid_2D) (bucket_idx : ℤ × ℤ) : list point
 
 theorem close_in_grid_means_close_in_space :
   ∀ (p₁ p₂ : point) (a b : grid_idx) (G : grid_2D) (l₁ l₂ : list point),
-  (a = get_grid_idx p₁ G.c) →
-  (b = get_grid_idx p₂ G.c) →
+  (a = get_grid_idx p₁) →
+  (b = get_grid_idx p₂) →
   (a ∈ G.data.keys) →
   (b ∈ G.data.keys) →
   (G.data.find a = some l₁) →

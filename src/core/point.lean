@@ -105,7 +105,12 @@ lemma point_norm_nonneg :
     apply int_nonneg_add,
     apply int_x_times_x_nonneg,
     apply int_x_times_x_nonneg
-  end
+end
+
+lemma not_leq_and_gt : ∀ (p : point) (n : ℤ),
+  ¬((∥p∥ ≤ n) ∧ (n < ∥p∥)) := begin
+    sorry
+end
 
 
 -- lemma sum_nonneg_nonneg :
