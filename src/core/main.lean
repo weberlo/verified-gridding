@@ -280,19 +280,7 @@ lemma closest_pair_monotonic_in_pt_list :
 
   sorry,
 
-
-
-
-  -- cases ps',
-
-  -- apply closest_pair_in_balls.no_ball,
-
-  -- apply closest_pair_in_balls.succ_ball,
-
-  -- sorry,
-
-  -- cases cp_aux_ps'_for_ps',
-
+  sorry,
 
 end
 
@@ -306,7 +294,6 @@ lemma aux_finds_closest_pair_in_balls:
       (closest_pair p q qs) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
     (∀ (ps : list point),
        closest_pair_in_balls c c_nonzero qs (aux (grid_points c c_nonzero qs) ps) ps) := begin
-
   intros c c_nonzero qs all_pts_dist_gt_one exists_pair ps,
 
   induction ps,
@@ -321,23 +308,24 @@ lemma aux_finds_closest_pair_in_balls:
   apply exists_q_in_range_implies_aux_finds_it,
   assumption,
 
-  -- simp [aux],
-  cases (aux (grid_points c c_nonzero qs) ps_tl);
-  cases (aux (grid_points c c_nonzero qs) (ps_hd :: ps_tl)),
-
+  apply closest_pair_monotonic_in_pt_list,
   assumption,
-
-  cases ps_ih,
-  apply closest_pair_in_balls.no_ball,
-
-  -- rename []
-  -- TODO seems like we should be able to reason through the definition at this
-  -- point.  But maybe we want some kind of lemma...
-  sorry,
-
-  sorry,
-
 end
+
+
+lemma closest_pair_in_balls_and_bounded_dist_implies_closest_pair :
+  ∀ (c : ℕ) (c_nonzero : c > 0) (ps : list point) (xy : option (point × point)),
+    -- If all points are at least distance 1 from each other
+    (∀ (p q : point), p ∈ ps ∧ q ∈ ps → ∥ p - q ∥ > 1) →
+    -- and there's a closest pair within distance `c`
+    (∃ (p q : point),
+      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
+    (closest_pair_in_balls c c_nonzero ps xy ps) →
+    ∃ (x y : point),
+      xy = some (x, y) ∧ (closest_pair x y ps) := begin
+  sorry,
+end
+
 
 
 lemma aux_gives_closest_pair:
@@ -349,29 +337,31 @@ lemma aux_gives_closest_pair:
       (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
     -- TODO we'll need a supposition that the closest pair is within distance `c`
     (∃ (p q : point),
-      aux c c_nonzero (grid_points c c_nonzero ps) ps = some (p, q)
+      aux (grid_points c c_nonzero ps) ps = some (p, q)
       ∧ closest_pair p q ps) := begin
-  intros c c_nonzero ps all_pts_dist_gt_one exists_pair,
-
-  have ps_nonempty : ps ≠ [] := begin
-    apply exists_closest_pair_implies_nonempty,
-    cases exists_pair,
-    cases exists_pair_h,
-    fapply exists.intro,
-    exact exists_pair_w,
-    fapply exists.intro,
-    exact exists_pair_h_w,
-    exact exists_pair_h_h.left,
-  end,
-
-  induction ps,
-
-  contradiction,
-
-  simp [aux],
-
+  -- TODO string together `closest_pair_in_balls_and_bounded_dist_implies_closest_pair` and `aux_finds_closest_pair_in_balls`.
   sorry,
 
+  -- intros c c_nonzero ps all_pts_dist_gt_one exists_pair,
+
+  -- have ps_nonempty : ps ≠ [] := begin
+  --   apply exists_closest_pair_implies_nonempty,
+  --   cases exists_pair,
+  --   cases exists_pair_h,
+  --   fapply exists.intro,
+  --   exact exists_pair_w,
+  --   fapply exists.intro,
+  --   exact exists_pair_h_w,
+  --   exact exists_pair_h_h.left,
+  -- end,
+
+  -- induction ps,
+
+  -- contradiction,
+
+  -- simp [aux],
+
+  -- sorry,
 end
 
 
@@ -392,7 +382,7 @@ begin
 
   have aux_gives_closest :
     (∃ (p q : point),
-        aux c c_nonzero (grid_points c c_nonzero ps) ps = some (p, q)
+        aux (grid_points c c_nonzero ps) ps = some (p, q)
         ∧ closest_pair p q ps) := begin
     apply aux_gives_closest_pair,
     assumption,
