@@ -99,7 +99,6 @@ def find_closest_pair
   )
 
 
-
 #eval find_closest_pair 3 (by simp) [(0, 0), (2, 0), (5, 0)]
 #eval find_closest_pair 4 (by simp) [(0, 0), (2, 0), (5, 0)]
 #eval find_closest_pair 7 (by simp) [(0, 0), (2, 2), (5, 0)]
@@ -204,30 +203,33 @@ begin
   sorry
 end
 
+
+inductive closest_pair_in_balls (c : ℕ) (c_nonzero : c > 0) (ps : list point) :
+  point → point → list point → Prop
+| no_ball (x y : point) : closest_pair_in_balls x y []
+| succ_ball (x y : point) (p : point) (ps' : list point) :
+    (∀ (q r : point),
+        q ∈ ps → r ∈ ps →
+        ∥ q - p ∥ ≤ c →
+        ∥ r - p ∥ ≤ c →
+        (∥ x - y ∥ ≤ ∥ q - p ∥ ∧
+         ∥ x - y ∥ ≤ ∥ r - p ∥)) →
+    closest_pair_in_balls x y ps' →
+    closest_pair_in_balls x y (p :: ps')
+
+
+
 lemma aux_gives_closest_pair:
-  ∀ (ps : list point) (c : ℕ) (c_nonzero : c > 0),
-    ps ≠ [] →
+  ∀ (c : ℕ) (c_nonzero : c > 0) (ps : list point),
+    -- If all points are at least distance 1 from each other
+    (∀ (p q : point), p ∈ ps ∧ q ∈ ps → ∥ p - q ∥ > 1) →
+    -- and there's a closest pair within distance `c`
+    (∃ (p q : point),
+      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
     -- TODO we'll need a supposition that the closest pair is within distance `c`
     (∃ (p q : point),
       aux c c_nonzero (grid_points c c_nonzero ps) ps = some (p, q)
       ∧ closest_pair p q ps) := begin
-  sorry
-end
-
-
--- TODO see if there's a simpler way to phrase this.
-theorem find_closest_pair_correct :
-  ∀ (c : ℕ) (c_nonzero : c > 0) (ps : list point),
-    -- If all points are at least distance 1 from each other
-    (∀ (p q : point), p ∈ ps ∧ q ∈ ps → ∥ p - q ∥ > 1) →
-    -- and there's a closest pair
-    (∃ (p q : point),
-      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
-      -- then our algorithm finds the closest pair.
-      (∃ (p q : point),
-        (find_closest_pair c c_nonzero ps) = some (p, q) ∧
-        closest_pair p q ps) :=
-begin
   intros c c_nonzero ps all_pts_dist_gt_one exists_pair,
 
   have ps_nonempty : ps ≠ [] := begin
@@ -241,12 +243,37 @@ begin
     exact exists_pair_h_h.left,
   end,
 
+  induction ps,
+
+  contradiction,
+
+  simp [aux],
+
+end
+
+
+-- TODO see if there's a simpler way to phrase this.
+theorem find_closest_pair_correct :
+  ∀ (c : ℕ) (c_nonzero : c > 0) (ps : list point),
+    -- If all points are at least distance 1 from each other
+    (∀ (p q : point), p ∈ ps ∧ q ∈ ps → ∥ p - q ∥ > 1) →
+    -- and there's a closest pair within distance `c`
+    (∃ (p q : point),
+      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
+      -- then our algorithm finds the closest pair.
+      (∃ (p q : point),
+        (find_closest_pair c c_nonzero ps) = some (p, q) ∧
+        closest_pair p q ps) :=
+begin
+  intros c c_nonzero ps all_pts_dist_gt_one exists_pair,
+
   have aux_gives_closest :
     (∃ (p q : point),
         aux c c_nonzero (grid_points c c_nonzero ps) ps = some (p, q)
         ∧ closest_pair p q ps) := begin
     apply aux_gives_closest_pair,
-    exact ps_nonempty,
+    assumption,
+    assumption,
   end,
   cases aux_gives_closest,
   cases aux_gives_closest_h,
