@@ -13,6 +13,8 @@ instance : has_add point :=
   ⟨λ p₁ p₂, (p₁.1 + p₂.1, p₁.2 + p₂.2)⟩
 instance : has_sub point :=
   ⟨λ p₁ p₂, (p₁.1 - p₂.1, p₁.2 - p₂.2)⟩
+instance : has_neg point :=
+  ⟨λ p, (-p.1, -p.2)⟩
 instance : inhabited point :=
   ⟨(0, 0)⟩
 
@@ -105,6 +107,16 @@ lemma point_norm_nonneg :
     apply int_nonneg_add,
     apply int_x_times_x_nonneg,
     apply int_x_times_x_nonneg
+end
+
+lemma point_norm_add_comm :
+  ∀ (p q : point), ∥ p + q ∥ = ∥ q + p ∥ := begin
+    sorry
+end
+
+lemma point_norm_sub_comm :
+  ∀ (p q : point), ∥ p - q ∥ = ∥ q - p ∥ := begin
+    sorry
 end
 
 lemma not_leq_and_gt : ∀ (p : point) (n : ℤ),

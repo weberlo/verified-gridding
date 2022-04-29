@@ -265,30 +265,31 @@ begin
   apply and.intro,
   exact aux_gives_closest_h_h.left,
 
-  -- have closest_pair_implies_dist_leq_c : ∀ (p q : point),
-  --   closest_pair p q ps → ∥ p - q ∥ ≤ ↑c := begin
-  --   intros p q closest,
-  --   cases exists_pair,
-  --   cases exists_pair_h,
-  -- end,
-
   have aux_closest_dist_leq_c : (∥aux_gives_closest_w - aux_gives_closest_h_w∥ ≤ ↑c) := begin
     cases exists_pair,
     cases exists_pair_h,
-    -- TODO we might not have that they're "lined up" like this, and the
-    -- matching could be crossed.
-    cases aux_gives_closest_h_h,
-    cases exists_pair_h_h,
 
-    unfold closest_pair at aux_gives_closest_h_h_right,
-    unfold closest_pair at exists_pair_h_h_left,
-
-    have ep_w_eq_aux_w : exists_pair_w = aux_gives_closest_w := begin
-      sorry
+    rename [
+      aux_gives_closest_w → x,
+      aux_gives_closest_h_w → y,
+      exists_pair_w → z,
+      exists_pair_h_w → w
+    ],
+    have cp_xy : closest_pair x y ps := aux_gives_closest_h_h.right,
+    have cp_zw : closest_pair z w ps := exists_pair_h_h.left,
+    have xy_eq_zw : ((x = z ∧ y = w) ∨ (x = w ∧ y = z)) := begin
+      apply two_closest_pairs_implies_same,
+      assumption,
+      assumption,
     end,
-    have ep_h_w_eq_aux_h_w : exists_pair_w = aux_gives_closest_w := begin
-      sorry
-    end
+    cases xy_eq_zw;
+    cases xy_eq_zw;
+    rw [←xy_eq_zw_left, ←xy_eq_zw_right] at exists_pair_h_h,
+
+    exact exists_pair_h_h.right.right,
+
+    rw [point_norm_sub_comm x y],
+    exact exists_pair_h_h.right.right,
   end,
 
   by_cases (↑c < ∥aux_gives_closest_w - aux_gives_closest_h_w∥),
