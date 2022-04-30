@@ -53,7 +53,7 @@ def grid_points (c : ℕ⁺) : list point → grid_2D
     in
     ⟨g.data.insert grid_idx (x :: l), c, x :: g.ps⟩
 
-#check (grid_points 3 (by simp) [(0, 0), (2, 2)]).data.entries
+#check (grid_points ⟨3, by simp⟩ [(0, 0), (2, 2)]).data.entries
 
 def get_neighbs (p : point) (g : grid_2D) : list point :=
   let grid_idx := get_grid_idx p in
