@@ -5,6 +5,7 @@ import data.nat.basic
 import data.int.sqrt
 
 import core.point
+import core.util
 
 -- The definition happens to align with points here, but they're conceptually
 -- different.
@@ -17,8 +18,7 @@ instance : has_repr grid_idx :=
 
 structure grid_2D :=
   (data : hash_map grid_idx (λ _, list point))
-  (c : ℕ)
-  (c_nonzero : c > 0)
+  (c : ℕ⁺)
   (ps : list point)
 
 -- def grid_2D := hash_map grid_idx (λ _, list point)
@@ -39,9 +39,9 @@ def get_grid_idx (p : point) : grid_idx :=
   (p.1, p.2)
 
 -- `C` is an upper bound on the closest pair distance.
-def grid_points (c : ℕ) (c_nonzero : c > 0) : list point → grid_2D
+def grid_points (c : ℕ⁺) : list point → grid_2D
 -- TODO need to update this function to return a structure, rather than just the hash map for the grid.
-| [] := ⟨mk_hash_map point_hash, c, c_nonzero, []⟩
+| [] := ⟨mk_hash_map point_hash, c, []⟩
 | (x :: xs) :=
     let g := grid_points xs in
     -- TODO could just use `g.modify`
@@ -51,7 +51,7 @@ def grid_points (c : ℕ) (c_nonzero : c > 0) : list point → grid_2D
       | some l' := l'
       end
     in
-    ⟨g.data.insert grid_idx (x :: l), c, c_nonzero, x :: g.ps⟩
+    ⟨g.data.insert grid_idx (x :: l), c, x :: g.ps⟩
 
 #check (grid_points 3 (by simp) [(0, 0), (2, 2)]).data.entries
 
