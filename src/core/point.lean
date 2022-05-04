@@ -124,6 +124,21 @@ lemma not_leq_and_gt : ∀ (p : point) (n : ℤ),
     sorry
 end
 
+lemma not_x_lt_y_and_gt_y :
+  ∀ (x y : ℤ),
+    ¬(x < y ∧ y < x) := begin
+  sorry
+end
+
+lemma not_lt_and_not_gt_implies_eq :
+  ∀ (x y : ℤ),
+    ¬(x < y) →
+    ¬(y < x) →
+    x = y := begin
+  sorry
+end
+
+
 
 -- lemma sum_nonneg_nonneg :
 --   ∀ (x y : ℚ), (x ≥ 0) → (y ≥ 0) → (x + y ≥ 0) :=
@@ -163,3 +178,4 @@ def point_hash : point → ℕ
 | (a, b) := a.nat_abs + b.nat_abs
 
 #eval point_hash (1, 4)
+

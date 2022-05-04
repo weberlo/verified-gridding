@@ -7,6 +7,30 @@
 \usepackage{titlesec}
 \usepackage{tcolorbox}
 
+\DeclareUnicodeCharacter{3B4}{$\bm{\delta}$}
+\DeclareUnicodeCharacter{3B8}{$\bm{\theta}$}
+\DeclareUnicodeCharacter{3BB}{$\lambda$}
+\DeclareUnicodeCharacter{3BC}{$\mu$}
+\DeclareUnicodeCharacter{3BC}{$\pi$}
+\DeclareUnicodeCharacter{3C3}{$\sigma$}
+\DeclareUnicodeCharacter{3C0}{$\pi$}
+\DeclareUnicodeCharacter{2200}{$\forall$}
+\DeclareUnicodeCharacter{2203}{$\exists$}
+\DeclareUnicodeCharacter{2208}{$\in$}
+\DeclareUnicodeCharacter{2208}{$\in$}
+\DeclareUnicodeCharacter{2260}{$\neq$}
+\DeclareUnicodeCharacter{2227}{$\wedge$}
+\DeclareUnicodeCharacter{2225}{$\|$}
+\DeclareUnicodeCharacter{2194}{$\iff$}
+\DeclareUnicodeCharacter{00AC}{$\neg$}
+\DeclareUnicodeCharacter{2228}{$\vee$}
+\DeclareUnicodeCharacter{2115}{$\mathbb{N}$}
+\DeclareUnicodeCharacter{2124}{$\mathbb{Z}$}
+\DeclareUnicodeCharacter{207A}{$^+$}
+\DeclareUnicodeCharacter{2264}{$\leq$}
+\DeclareUnicodeCharacter{2192}{$\to$}
+
+
 \titleformat{\section}
   {\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.3pt]}]
 
@@ -31,16 +55,243 @@ loganweb@mit.edu
 
 \maketitle
 
+\section{Introduction}
+In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
+For a long time, proof assistants were thought of as unsatisfactory for formalizing undergraduate-level mathematics, let alone \textit{research}-level mathematics.
+This image began to change when a challenge by accomplished mathematician, Peter Scholze, was proposed and taken up by the Lean community.
+This challenge became known as \href{https://xenaproject.wordpress.com/2020/12/05/liquid-tensor-experiment/}{The Liquid Tensor Experiment}.
+
+
+% No single innovation
+The rise of Lean cannot be explained by any significant \textit{technological} innovation---it was a \textit{cultural} innovation.
+% TODO this makes it sound like Lean isn't sound
+The most relevant comparison is to the Coq proof assistant, which, in contrast to Lean, has emphasized sound, type-theoretic principles from its conception.
+Lean has instead focused on working backwards from how mathematicians prefer to work.
+As a result, Lean has incorporated quotient types and embraces classical mathematics, which uses the law of excluded middle, destroying computational properties.
+With that being said.
+
+
+% TODO doesn't seem like this is true after reading into it. seems more like the emphasis on the axiom of choice and baked-in quotient types was important.
+It was a plethora of performance engineering and ergonomic improvements that made Lean an attractive platform for the formalization of mathematics.
+
+In one of the earlier lectures, a student asked Professor Indyk how some of algorithm analysis we had done could be made formal.
+He replied with an anecdote that a student once tried to formally verify a sweep algorithm in his class.
+The student restricted to integers, then to 1 dimension, and ended up proving that you could sort a list of integers.
+The author took this as a challenge and decided to assess the current state of formal verification, given the existence of libraries like Mathlib.
+
+\section{The Problem Specification}
+
+\begin{minted}{lean}
+def closest_pair (p q : point) (ps : list point) : Prop :=
+  (p ∈ ps) ∧
+  (q ∈ ps) ∧
+  (p ≠ q) ∧
+  (∀ (r s : point),
+      (same_pair (p, q) (r, s) ↔ ∥ p - q ∥ = ∥ r - s ∥) ∧
+     (¬(same_pair (p, q) (r, s)) ↔ ∥ p - q ∥ < ∥ r - s ∥))
+
+def closest_pair_with_help (p q : point) (ps : list point) (c : ℕ⁺) : Prop :=
+  (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)
+\end{minted}
+\newpage
+
+
+\begin{minted}{lean}
+def find_closest_pair (ps : list point) (c : ℕ⁺) : (point × point) := sorry
+
+theorem find_closest_pair_correct :
+  ∀ (ps : list point) (c : ℕ⁺),
+    (∃ (p q : point),
+      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
+    (∃ (p q : point),
+      find_closest_pair ps c = (p, q) ∧
+      closest_pair p q ps) := begin
+  sorry
+end
+\end{minted}
+
+
+\section{Integer Grids}
 \begin{align*}
   \| (k - 1, k-1) \|_2^2 &\leq 1 \\
-  (k-1)^2 + (k-1)^2 & \leq 1 \\
-  2(k^2 - 2k + 1) &\leq 1 \\
-  \frac{1}{2}(2(k^2 - 2k + 1)) &\leq \frac{1}{2} \\
-  k^2 - 2k + 1 &\leq 0
+  2(k-1)^2 & \leq 1 \\
+  % (k-1)^2 + (k-1)^2 & \leq 1 \\
+  % 2(k^2 - 2k + 1) &\leq 1 \\
+  % \frac{1}{2}(2(k^2 - 2k + 1)) &\leq \frac{1}{2} \\
+  % k^2 - 2k + 1 &\leq 0
 \end{align*}
 The only integral solution is 1.
 
 Solution: $k=1$
+
+\section{Strengthening the Induction Hypothesis}
+Our core algorithm recurses on the list of points, combining results from subcalls to eventually arrive at the closest pair.
+Then it seems natural for our proof of the algorithm's correctness to mirror its definition, which we could achieve by inducting on the list of points.
+
+However, inducting on the list of points to prove the closest pair predicate gives us an incorrect induction hypothesis.
+The induction hypothesis will state that the recursive call contains the closest pair among all of the points processed in the recursive call.
+But this is not true!
+Since we draw balls around each point that we process, we may pick points outside of the set of points we have recursed over.
+
+Thus, we must strengthen the induction hypothesis to more closely align our analysis of the algorithm than the definition.
+
+\begin{minted}{lean}
+inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
+  option (point × point) → list point → Prop
+| no_ball (xy : option (point × point)) : closest_pair_in_balls xy []
+| succ_ball (xy : option (point × point)) (p : point) (ps' : list point) :
+    ((∃ (q : point), q ∈ qs ∧ ∥q - p∥ ≤ c) →
+      ∃ (x y : point),
+        xy = some (x, y) ∧
+        (∀ (q : point),
+            q ∈ qs →
+            ∥q - p∥ ≤ c →
+            ∥x - y∥ ≤ ∥q - p∥)) →
+    closest_pair_in_balls xy ps' →
+    closest_pair_in_balls xy (p :: ps')
+\end{minted}
+
+\section{Admitted Lemmas}
+\begin{minted}{lean}
+lemma not_x_lt_y_and_gt_y :
+  ∀ (x y : ℤ),
+    ¬(x < y ∧ y < x) := begin
+  sorry
+end
+
+lemma not_lt_and_not_gt_implies_eq :
+  ∀ (x y : ℤ), ¬(x < y) → ¬(y < x) → x = y := begin
+  sorry
+end
+
+lemma int_nonneg_add :
+  ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin
+    sorry
+end
+
+lemma int_x_times_x_nonneg :
+  ∀ (x : ℤ), int.nonneg (x * x) := begin
+    sorry
+end
+
+lemma nonneg_iff_leq_zero :
+  ∀ (x : ℤ), int.nonneg x ↔ 0 ≤ x := begin
+    sorry
+  end
+\end{minted}
+
+\newpage
+\begin{minted}{lean}
+lemma a_nonneg_times_b_nonneq_means_a_times_b_nonneg :
+  ∀ (a b : ℤ), int.nonneg a → int.nonneg b → int.nonneg (a * b) := begin
+    sorry
+end
+
+lemma lift_nat_nonneg :
+  ∀ (n : ℕ), int.nonneg ↑n := begin
+    sorry
+end
+
+lemma x_div_plus_y_div_eq_x_plus_y_div_minus_sum_mod_div :
+  ∀ (x y z : ℤ), x/z + y/z = (x + y)/z - (x % z + y % z) := begin
+    sorry
+  end
+
+lemma x_div_y_times_y :
+  ∀ (x y : ℤ), (x / y) * y = x - x % y := begin
+    sorry
+end
+
+lemma point_norm_add_comm :
+  ∀ (p q : point), ∥ p + q ∥ = ∥ q + p ∥ := begin
+    sorry
+end
+
+lemma point_norm_sub_comm :
+  ∀ (p q : point), ∥ p - q ∥ = ∥ q - p ∥ := begin
+    sorry
+end
+
+lemma not_leq_and_gt : ∀ (p : point) (n : ℤ),
+  ¬((∥p∥ ≤ n) ∧ (n < ∥p∥)) := begin
+    sorry
+end
+
+lemma exists_closest_pair_implies_nonempty :
+  ∀ (ps : list point), (∃ (p q : point), closest_pair p q ps) → ps ≠ [] :=
+begin
+  sorry
+end
+
+lemma exists_q_in_range_implies_aux_finds_it:
+  ∀ (q : point) (qs' : list point) (ps : list point) (c : ℕ⁺),
+    (∃ (p : point), p ∈ ps ∧ ∥p - q∥ ≤ ↑c) →
+    (∃ (x y : point),
+      aux (grid_points c ps) (q :: qs') = some (x, y) ∧
+      ∀ (p : point),
+        p ∈ ps →
+        ∥p - q∥ ≤ ↑c →
+        ∥x - y∥ ≤ ∥p - q∥) := begin
+  sorry
+end
+
+lemma cp_with_help_implies_eps_separated :
+  ∀ (p q : point) (ps : list point) (c : ℕ⁺),
+    cp_with_help p q ps c → eps_separated ps 1 := begin
+  sorry
+end
+
+lemma get_neighbs_contains_all_within_ball :
+  ∀ (c : ℕ⁺) (ps : list point) (p q : point) (g : grid_2D),
+    (∥ p - q ∥ ≤ c) → (q ∈ get_neighbs p g) := begin
+  sorry
+end
+
+lemma get_min_dist_point_in_neighbs_correct :
+  ∀ (p q : point) (g : grid_2D),
+    ∥ p - q ∥ ≤ g.c →
+      ∃ (x : point),
+        get_min_dist_point_in_neighbs p g = some (x, p) ∧
+        ∥ p - x ∥ ≤ ∥ p - q ∥ := begin
+  sorry
+end
+\end{minted}
+
+\subsection{Likely Existing in Mathlib.}
+The author believes most admitted lemmas about the integers can be mapped onto existing proofs in Mathlib.
+
+Examples:
+\begin{itemize}
+  \item An integer cannot be simultaneously smaller and larger than another integer.
+  \item If an integer is not smaller or larger than another integer, then they are equal.
+  \item Adding nonnegative integers is nonnegative.
+\end{itemize}
+
+\subsection{Not Existing in Mathlib}
+\paragraph{Closest Pair.}
+Examples:
+\begin{itemize}
+  \item If there's a closest pair, then the set of points is nonempty.
+  \item If the closest pair is at least distance 1 apart, then all points are at least distance 1 apart.
+  \item Finding all cells intersecting a hypercube of radius $\sqrt{c}$ finds all points in a ball of radius $c$.
+  \item Given a list of points, we can find the closest point to a distinguished point.
+\end{itemize}
+
+\paragraph{Norm.}
+% TODO we haven't `admit`ted everything in this section
+% TODO need a different name than `point_norm'.
+We can't directly leverage the infrastructure and theorems surrounding normed spaces, because the norm typeclass requires a codomain of $\R$, destroying computability properties.
+Thus, we admit the following lemmas:
+\begin{itemize}
+  \item The point norm is commutative.
+\end{itemize}
+Thus, we prove the following lemmas:
+\begin{itemize}
+  \item The point norm is nonnegative.
+\end{itemize}
+In principle, a norm instance could be provided whereby the output would be lifted from $\Z$ to $\R$.
+Then, perhaps we could transport theorems from normed spaces.
+This might work, but it could also introduce a lot of overhead, where we intersperse coercions between $\Z$ and $\R$ throughout our proofs.
 
 
 \bibliographystyle{plain}

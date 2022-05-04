@@ -1,0 +1,75 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{lemma} \PYG{n}{a\PYGZus{}nonneg\PYGZus{}times\PYGZus{}b\PYGZus{}nonneq\PYGZus{}means\PYGZus{}a\PYGZus{}times\PYGZus{}b\PYGZus{}nonneg} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{a} \PYG{n}{b} \PYG{o}{:} \PYG{n}{ℤ}\PYG{o}{),} \PYG{n}{int.nonneg} \PYG{n}{a} \PYG{n+nb+bp}{→} \PYG{n}{int.nonneg} \PYG{n}{b} \PYG{n+nb+bp}{→} \PYG{n}{int.nonneg} \PYG{o}{(}\PYG{n}{a} \PYG{n+nb+bp}{*} \PYG{n}{b}\PYG{o}{)} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{lift\PYGZus{}nat\PYGZus{}nonneg} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{n} \PYG{o}{:} \PYG{n}{ℕ}\PYG{o}{),} \PYG{n}{int.nonneg} \PYG{n+nb+bp}{↑}\PYG{n}{n} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{x\PYGZus{}div\PYGZus{}plus\PYGZus{}y\PYGZus{}div\PYGZus{}eq\PYGZus{}x\PYGZus{}plus\PYGZus{}y\PYGZus{}div\PYGZus{}minus\PYGZus{}sum\PYGZus{}mod\PYGZus{}div} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{x} \PYG{n}{y} \PYG{n}{z} \PYG{o}{:} \PYG{n}{ℤ}\PYG{o}{),} \PYG{n}{x}\PYG{n+nb+bp}{/}\PYG{n}{z} \PYG{n+nb+bp}{+} \PYG{n}{y}\PYG{n+nb+bp}{/}\PYG{n}{z} \PYG{n+nb+bp}{=} \PYG{o}{(}\PYG{n}{x} \PYG{n+nb+bp}{+} \PYG{n}{y}\PYG{o}{)}\PYG{n+nb+bp}{/}\PYG{n}{z} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{o}{(}\PYG{n}{x} \PYG{n+nb+bp}{\PYGZpc{}} \PYG{n}{z} \PYG{n+nb+bp}{+} \PYG{n}{y} \PYG{n+nb+bp}{\PYGZpc{}} \PYG{n}{z}\PYG{o}{)} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+  \PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{x\PYGZus{}div\PYGZus{}y\PYGZus{}times\PYGZus{}y} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{x} \PYG{n}{y} \PYG{o}{:} \PYG{n}{ℤ}\PYG{o}{),} \PYG{o}{(}\PYG{n}{x} \PYG{n+nb+bp}{/} \PYG{n}{y}\PYG{o}{)} \PYG{n+nb+bp}{*} \PYG{n}{y} \PYG{n+nb+bp}{=} \PYG{n}{x} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{x} \PYG{n+nb+bp}{\PYGZpc{}} \PYG{n}{y} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{point\PYGZus{}norm\PYGZus{}add\PYGZus{}comm} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{+} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{=} \PYG{n+nb+bp}{∥} \PYG{n}{q} \PYG{n+nb+bp}{+} \PYG{n}{p} \PYG{n+nb+bp}{∥} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{point\PYGZus{}norm\PYGZus{}sub\PYGZus{}comm} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{=} \PYG{n+nb+bp}{∥} \PYG{n}{q} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{p} \PYG{n+nb+bp}{∥} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{not\PYGZus{}leq\PYGZus{}and\PYGZus{}gt} \PYG{o}{:} \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{n} \PYG{o}{:} \PYG{n}{ℤ}\PYG{o}{),}
+  \PYG{n+nb+bp}{¬}\PYG{o}{((}\PYG{n+nb+bp}{∥}\PYG{n}{p}\PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n}{n}\PYG{o}{)} \PYG{n+nb+bp}{∧} \PYG{o}{(}\PYG{n}{n} \PYG{n+nb+bp}{\PYGZlt{}} \PYG{n+nb+bp}{∥}\PYG{n}{p}\PYG{n+nb+bp}{∥}\PYG{o}{))} \PYG{o}{:=} \PYG{k+kd}{begin}
+    \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{exists\PYGZus{}closest\PYGZus{}pair\PYGZus{}implies\PYGZus{}nonempty} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{),} \PYG{o}{(}\PYG{n+nb+bp}{∃} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),} \PYG{n}{closest\PYGZus{}pair} \PYG{n}{p} \PYG{n}{q} \PYG{n}{ps}\PYG{o}{)} \PYG{n+nb+bp}{→} \PYG{n}{ps} \PYG{n+nb+bp}{≠} \PYG{o}{[]} \PYG{o}{:=}
+\PYG{k+kd}{begin}
+  \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{exists\PYGZus{}q\PYGZus{}in\PYGZus{}range\PYGZus{}implies\PYGZus{}aux\PYGZus{}finds\PYGZus{}it}\PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{qs\PYGZsq{}} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{c} \PYG{o}{:} \PYG{n}{ℕ}\PYG{n+nb+bp}{⁺}\PYG{o}{),}
+    \PYG{o}{(}\PYG{n+nb+bp}{∃} \PYG{o}{(}\PYG{n}{p} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),} \PYG{n}{p} \PYG{n+nb+bp}{∈} \PYG{n}{ps} \PYG{n+nb+bp}{∧} \PYG{n+nb+bp}{∥}\PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q}\PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n+nb+bp}{↑}\PYG{n}{c}\PYG{o}{)} \PYG{n+nb+bp}{→}
+    \PYG{o}{(}\PYG{n+nb+bp}{∃} \PYG{o}{(}\PYG{n}{x} \PYG{n}{y} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),}
+      \PYG{n}{aux} \PYG{o}{(}\PYG{n}{grid\PYGZus{}points} \PYG{n}{c} \PYG{n}{ps}\PYG{o}{)} \PYG{o}{(}\PYG{n}{q} \PYG{o}{::} \PYG{n}{qs\PYGZsq{}}\PYG{o}{)} \PYG{n+nb+bp}{=} \PYG{n}{some} \PYG{o}{(}\PYG{n}{x}\PYG{o}{,} \PYG{n}{y}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+      \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),}
+        \PYG{n}{p} \PYG{n+nb+bp}{∈} \PYG{n}{ps} \PYG{n+nb+bp}{→}
+        \PYG{n+nb+bp}{∥}\PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q}\PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n+nb+bp}{↑}\PYG{n}{c} \PYG{n+nb+bp}{→}
+        \PYG{n+nb+bp}{∥}\PYG{n}{x} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{y}\PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n+nb+bp}{∥}\PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q}\PYG{n+nb+bp}{∥}\PYG{o}{)} \PYG{o}{:=} \PYG{k+kd}{begin}
+  \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{cp\PYGZus{}with\PYGZus{}help\PYGZus{}implies\PYGZus{}eps\PYGZus{}separated} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{c} \PYG{o}{:} \PYG{n}{ℕ}\PYG{n+nb+bp}{⁺}\PYG{o}{),}
+    \PYG{n}{cp\PYGZus{}with\PYGZus{}help} \PYG{n}{p} \PYG{n}{q} \PYG{n}{ps} \PYG{n}{c} \PYG{n+nb+bp}{→} \PYG{n}{eps\PYGZus{}separated} \PYG{n}{ps} \PYG{l+m+mi}{1} \PYG{o}{:=} \PYG{k+kd}{begin}
+  \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{get\PYGZus{}neighbs\PYGZus{}contains\PYGZus{}all\PYGZus{}within\PYGZus{}ball} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{c} \PYG{o}{:} \PYG{n}{ℕ}\PYG{n+nb+bp}{⁺}\PYG{o}{)} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{g} \PYG{o}{:} \PYG{n}{grid\PYGZus{}2D}\PYG{o}{),}
+    \PYG{o}{(}\PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n}{c}\PYG{o}{)} \PYG{n+nb+bp}{→} \PYG{o}{(}\PYG{n}{q} \PYG{n+nb+bp}{∈} \PYG{n}{get\PYGZus{}neighbs} \PYG{n}{p} \PYG{n}{g}\PYG{o}{)} \PYG{o}{:=} \PYG{k+kd}{begin}
+  \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+
+\PYG{k+kd}{lemma} \PYG{n}{get\PYGZus{}min\PYGZus{}dist\PYGZus{}point\PYGZus{}in\PYGZus{}neighbs\PYGZus{}correct} \PYG{o}{:}
+  \PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{g} \PYG{o}{:} \PYG{n}{grid\PYGZus{}2D}\PYG{o}{),}
+    \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n}{g.c} \PYG{n+nb+bp}{→}
+      \PYG{n+nb+bp}{∃} \PYG{o}{(}\PYG{n}{x} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),}
+        \PYG{n}{get\PYGZus{}min\PYGZus{}dist\PYGZus{}point\PYGZus{}in\PYGZus{}neighbs} \PYG{n}{p} \PYG{n}{g} \PYG{n+nb+bp}{=} \PYG{n}{some} \PYG{o}{(}\PYG{n}{x}\PYG{o}{,} \PYG{n}{p}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+        \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{x} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{o}{:=} \PYG{k+kd}{begin}
+  \PYG{g+gr}{sorry}
+\PYG{k+kd}{end}
+\end{Verbatim}

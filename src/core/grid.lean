@@ -1,5 +1,4 @@
 import data.hash_map
-import algebra.ring.basic
 import data.int.basic
 import data.nat.basic
 import data.int.sqrt
@@ -57,7 +56,9 @@ def grid_points (c : ℕ⁺) : list point → grid_2D
 
 def get_neighbs (p : point) (g : grid_2D) : list point :=
   let grid_idx := get_grid_idx p in
-  let bound := nat.sqrt g.c + 1 in
+  -- TODO do we need a `+ 1`?
+  -- let bound := nat.sqrt g.c + 1 in
+  let bound := nat.sqrt g.c in
   let kernel : list (ℤ × ℤ) :=
     (do
         j <- list.range (2 * bound + 1),

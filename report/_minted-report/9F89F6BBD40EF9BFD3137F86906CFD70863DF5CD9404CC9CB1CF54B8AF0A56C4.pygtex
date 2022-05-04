@@ -1,0 +1,12 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kd}{def} \PYG{n}{closest\PYGZus{}pair} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{:} \PYG{k+kt}{Prop} \PYG{o}{:=}
+  \PYG{o}{(}\PYG{n}{p} \PYG{n+nb+bp}{∈} \PYG{n}{ps}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+  \PYG{o}{(}\PYG{n}{q} \PYG{n+nb+bp}{∈} \PYG{n}{ps}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+  \PYG{o}{(}\PYG{n}{p} \PYG{n+nb+bp}{≠} \PYG{n}{q}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+  \PYG{o}{(}\PYG{n+nb+bp}{∀} \PYG{o}{(}\PYG{n}{r} \PYG{n}{s} \PYG{o}{:} \PYG{n}{point}\PYG{o}{),}
+      \PYG{o}{(}\PYG{n}{same\PYGZus{}pair} \PYG{o}{(}\PYG{n}{p}\PYG{o}{,} \PYG{n}{q}\PYG{o}{)} \PYG{o}{(}\PYG{n}{r}\PYG{o}{,} \PYG{n}{s}\PYG{o}{)} \PYG{n+nb+bp}{↔} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{=} \PYG{n+nb+bp}{∥} \PYG{n}{r} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{s} \PYG{n+nb+bp}{∥}\PYG{o}{)} \PYG{n+nb+bp}{∧}
+     \PYG{o}{(}\PYG{n+nb+bp}{¬}\PYG{o}{(}\PYG{n}{same\PYGZus{}pair} \PYG{o}{(}\PYG{n}{p}\PYG{o}{,} \PYG{n}{q}\PYG{o}{)} \PYG{o}{(}\PYG{n}{r}\PYG{o}{,} \PYG{n}{s}\PYG{o}{))} \PYG{n+nb+bp}{↔} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{\PYGZlt{}} \PYG{n+nb+bp}{∥} \PYG{n}{r} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{s} \PYG{n+nb+bp}{∥}\PYG{o}{))}
+
+\PYG{k+kd}{def} \PYG{n}{closest\PYGZus{}pair\PYGZus{}with\PYGZus{}help} \PYG{o}{(}\PYG{n}{p} \PYG{n}{q} \PYG{o}{:} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{ps} \PYG{o}{:} \PYG{n}{list} \PYG{n}{point}\PYG{o}{)} \PYG{o}{(}\PYG{n}{c} \PYG{o}{:} \PYG{n}{ℕ}\PYG{n+nb+bp}{⁺}\PYG{o}{)} \PYG{o}{:} \PYG{k+kt}{Prop} \PYG{o}{:=}
+  \PYG{o}{(}\PYG{n}{closest\PYGZus{}pair} \PYG{n}{p} \PYG{n}{q} \PYG{n}{ps}\PYG{o}{)} \PYG{n+nb+bp}{∧} \PYG{o}{(}\PYG{l+m+mi}{1} \PYG{n+nb+bp}{\PYGZlt{}} \PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥}\PYG{o}{)} \PYG{n+nb+bp}{∧} \PYG{o}{(}\PYG{n+nb+bp}{∥} \PYG{n}{p} \PYG{n+nb+bp}{\PYGZhy{}} \PYG{n}{q} \PYG{n+nb+bp}{∥} \PYG{n+nb+bp}{≤} \PYG{n}{c}\PYG{o}{)}
+\end{Verbatim}
