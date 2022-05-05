@@ -57,7 +57,7 @@ def min_dist_point : list (point × ℚ) → option point
 --     let N := get_neighbs p g bucket_idx in
 --     ∀ n ∈ N, ∥ n - p ∥ ≤ g.t
 
-def get_min_dist_point_in_neighbs (p : point) (g : grid_2D) : option (point × point) :=
+def get_min_dist_pair_in_neighbs (p : point) (g : grid_2D) : option (point × point) :=
     let N := get_neighbs p g in
     let point_dist_pairs : list (point × ℚ) := N.map (λ q, (q, ∥ p - q ∥)) in
     match min_dist_point point_dist_pairs with
@@ -72,14 +72,15 @@ lemma get_neighbs_contains_all_within_ball :
   sorry
 end
 
-lemma get_min_dist_point_in_neighbs_correct :
-  ∀ (p q : point) (g : grid_2D),
-    ∥ p - q ∥ ≤ g.c →
-      ∃ (x : point),
-        get_min_dist_point_in_neighbs p g = some (x, p) ∧
-        ∥ p - x ∥ ≤ ∥ p - q ∥ := begin
-  sorry
-end
+-- lemma get_min_dist_pair_in_neighbs_correct :
+--   ∀ (p q : point) (g : grid_2D),
+--     ∥ p - q ∥ ≤ g.c →
+--       ∃ (x : point),
+--         get_min_dist_pair_in_neighbs p g = some (x, p) ∧
+--         ∥ p - x ∥ ≤ ∥ p - q ∥ := begin
+--   sorry
+-- end
+
 
 
 def aux (g : grid_2D) : list point → option (point × point)
@@ -94,16 +95,34 @@ def aux (g : grid_2D) : list point → option (point × point)
     --   | none := none
     --   end
     -- in
-    let curr_res := get_min_dist_point_in_neighbs p g in
-    match (curr_res, rec_res) with
-    | (some _, none) := curr_res
-    | (none, some _) := rec_res
-    | (some (p', q'), some (p'', q'')) :=
-        if ∥ p' - q' ∥ < ∥ p'' - q'' ∥
-        then curr_res
-        else rec_res
-    | (none, none) := none
+    let curr_res := get_min_dist_pair_in_neighbs p g in
+    -- TODO figure out why we can't get decidable to work on `point_le`.
+    if point_le' curr_res rec_res then curr_res else rec_res
+    -- match (curr_res, rec_res) with
+    -- | (some _, none) := curr_res
+    -- | (none, some _) := rec_res
+    -- | (some (p', q'), some (p'', q'')) :=
+    --     if ∥ p' - q' ∥ < ∥ p'' - q'' ∥
+    --     then curr_res
+    --     else rec_res
+    -- | (none, none) := none
+-- end
+
+
+def pt_in_ball (p q : point) (c : ℕ⁺) (qs : list point) : Prop :=
+  q ∈ qs ∧
+  q ≠ p ∧
+  ∥q - p∥ ≤ c
+
+
+lemma get_min_dist_pair_correct :
+  ∀ (p : point) (g : grid_2D),
+    ∀ (x : point),
+      (pt_in_ball p x g.c g.ps) →
+      ((get_min_dist_pair_in_neighbs p g) ≤ some (p, x)) := begin
+  sorry
 end
+
 
 
 /-
@@ -137,6 +156,26 @@ def closest_pair (p q : point) (ps : list point) : Prop :=
   (∀ (r s : point),
       (((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ = ∥ r - s ∥)) ∧
      (¬((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ < ∥ r - s ∥)))
+
+
+/-
+  TODO the definitions might be useful if proofs become too cumbersome.
+  The `has_le` definition could simplify the merge step in our algorithm (and
+  thus the reasoning).
+
+inductive closest_pair' : option (point × point) → list point → Prop
+| cp_empty : closest_pair' none []
+| cp_singleton (p : point) : closest_pair' none (p :: [])
+| cp_cons_no_update (p : point) (ps' : list point) (xy : option (point × point)) :
+    closest_pair' xy ps' →
+    (∀ (q : point), q ∈ ps' → (xy ≤ some (p, q))) →
+    closest_pair' xy (p :: ps')
+| cp_cons_update (p q : point) (ps' : list point) (xy : option (point × point)) :
+    closest_pair' xy ps' →
+    q ∈ ps' →
+    some (p, q) ≤ xy →
+    closest_pair' (some (p, q)) (p :: ps')
+-/
 
 
 /-
@@ -229,32 +268,43 @@ end
 
 
 inductive closest_pair_in_ball_union (c : ℕ⁺) (qs : list point) : option (point × point) → list point → Prop
-| no_ball (xy : option (point × point)) : closest_pair_in_ball_union xy []
-| cons_ball (xy : option (point × point)) (p : point) (ps' : list point) :
-    ((∃ (q : point), q ∈ qs ∧ ∥ q - p ∥ ≤ c) →
-      ∃ (x y : point),
-        xy = some (x, y) ∧
-        (∀ (q : point),
-            q ∈ qs →
-            ∥ q - p ∥ ≤ c →
-            ∥ x - y ∥ ≤ ∥ q - p ∥)) →
+| no_ball : closest_pair_in_ball_union none []
+| cons_ball_no_update (xy : option (point × point)) (p : point) (ps' : list point) :
     closest_pair_in_ball_union xy ps' →
+    (∀ (q : point),
+      pt_in_ball p q c ps' →
+      -- q ∈ qs →
+      -- q ≠ p →
+      -- (∥ q - p ∥ ≤ c) →
+      (xy ≤ some (p, q))) →
     closest_pair_in_ball_union xy (p :: ps')
+| cons_ball_update
+    (xy : option (point × point))
+    (p : point)
+    (ps' : list point)
+    (q : point) :
+    (
+      pt_in_ball p q c qs ∧
+      (∀ (x : point), (pt_in_ball p x c qs) → ∥ q - p ∥ ≤ ∥ x - p ∥) ∧
+      some (p, q) ≤ xy
+    ) →
+    closest_pair_in_ball_union xy ps' →
+    closest_pair_in_ball_union (some (p, q)) (p :: ps')
 
 
-lemma aux_monotonic_in_pt_list :
-  ∀ (c : ℕ⁺) (qs : list point) (p : point) (ps : list point),
-    ∃ (xy zw : option (point × point)),
-      (xy = aux (grid_points c ps) ps) ∧
-      (zw = aux (grid_points c ps) (p :: ps)) ∧
-      match (xy, zw) with
-      | (none, none) := true
-      | (some xy', none) := false
-      | (none, some zw') := true
-      | (some xy', some zw') := ∥ zw'.1 - zw'.2 ∥ ≤ ∥ xy'.1 - xy'.2 ∥
-      end := begin
-  sorry,
-end
+-- lemma aux_monotonic_in_pt_list :
+--   ∀ (c : ℕ⁺) (qs : list point) (p : point) (ps : list point),
+--     ∃ (xy zw : option (point × point)),
+--       (xy = aux (grid_points c ps) ps) ∧
+--       (zw = aux (grid_points c ps) (p :: ps)) ∧
+--       match (xy, zw) with
+--       | (none, none) := true
+--       | (some xy', none) := false
+--       | (none, some zw') := true
+--       | (some xy', some zw') := ∥ zw'.1 - zw'.2 ∥ ≤ ∥ xy'.1 - xy'.2 ∥
+--       end := begin
+--   sorry,
+-- end
 
 
 lemma closest_pair_monotonic_in_pt_list :
@@ -290,33 +340,201 @@ lemma cp_with_help_implies_eps_separated :
   sorry
 end
 
+lemma grid_pts_dot_c_is_arg_c :
+  ∀ (c : ℕ⁺) (qs : list point),
+    (grid_points c qs).c = c := sorry
+
+lemma grid_pts_dot_ps_is_arg_ps :
+  ∀ (c : ℕ⁺) (ps : list point),
+    (grid_points c ps).ps = ps := sorry
+
+lemma point_le_iff_point_le'_eq_true :
+  ∀ (xy zw : option (point × point)),
+    xy ≤ zw ↔ (point_le' xy zw = true) := begin
+  intros xy zw,
+  constructor,
+  sorry,
+  sorry,
+end
+
+lemma opt_point_le_some_implies_is_some :
+  ∀ (xy : option (point × point)) (z w : point),
+    xy ≤ some (z, w) ↔ (∃ (x y : point), xy = some (x, y)) := begin
+  sorry,
+end
+
+lemma get_mdp_includes_center_pt :
+  ∀ (p : point) (g : grid_2D),
+    (∃ (q : point), (get_min_dist_pair_in_neighbs p g) = some (p, q)) ∨
+    (get_min_dist_pair_in_neighbs p g) = none := begin
+  sorry
+end
+
+lemma closer_than_pt_in_ball_is_in_ball :
+  ∀ (p x y : point) (c : ℕ⁺) (qs : list point),
+    pt_in_ball p y c qs →
+    some (p, x) ≤ some (p, y) →
+    pt_in_ball p x c qs := begin
+  sorry
+end
+
+lemma aux_monotonic_in_pt_list :
+  ∀ (c : ℕ⁺) (g : grid_2D) (p : point) (ps' : list point),
+    (aux g (p :: ps')) ≤ (aux g ps')
+     := begin
+  intros c qs ps' p,
+  sorry,
+end
+
+lemma cp_in_ball_union_downward_closed :
+  ∀ (c : ℕ⁺) (xy zw : option (point × point)) (qs ps : list point),
+    closest_pair_in_ball_union c qs zw ps →
+    xy ≤ zw →
+    closest_pair_in_ball_union c qs xy ps
+     := begin
+  sorry,
+end
 
 lemma aux_finds_closest_pair_in_ball_union:
   ∀ (c : ℕ⁺) (qs : list point),
-    -- If there's a closest pair within distance `c`
-    (∃ (p q : point),
-      cp_with_help p q qs 1) →
-    -- `aux` finds the closest pair in union of balls of radius ≥ `c` around all
-    -- points in `qs`, when the list we recurse on is a sublist of `qs`.
+    -- `aux` finds the closest pair in union of balls of radius ≤ `c`
+    -- (intersected with `qs`) around all points in `ps`.
     (∀ (ps : list point),
       ps ⊆ qs →
       closest_pair_in_ball_union c qs (aux (grid_points c qs) ps) ps) := begin
-  intros c qs exists_pair ps ps_subseteq_qs,
-
+  intros c qs ps ps_subseteq_qs,
   induction ps,
+  {
+    apply closest_pair_in_ball_union.no_ball,
+  },
+  {
+    rename [ps_hd → p, ps_tl → ps'],
+    have ps'_subseteq_qs : ps' ⊆ qs :=
+      (list.cons_subset.mp ps_subseteq_qs).right,
+    have ih : closest_pair_in_ball_union c qs (aux (grid_points c qs) ps') ps' := ps_ih ps'_subseteq_qs,
+    clear ps_ih,
+    by_cases (
+      ∃ (q : point),
+        pt_in_ball p q c qs ∧
+        (∀ (x : point), pt_in_ball p x c qs → ∥ q - p ∥ ≤ ∥ x - p ∥) ∧
+        some (p, q) ≤ (aux (grid_points c qs) ps')),
+    -- Case: there is a point within a ball of `p` that is closer than the
+    -- recursive result.
+    {
+      -- Load up the environment with useful facts.
+      cases h with q hq,
+      have h_min_dist_pair : ∀ (x : point), (pt_in_ball p x c qs) → ((get_min_dist_pair_in_neighbs p (grid_points c qs)) ≤ some (p, x)) := begin
+        intros x x_in_ball,
+        apply get_min_dist_pair_correct,
+        rw [grid_pts_dot_c_is_arg_c],
+        rw [grid_pts_dot_ps_is_arg_ps],
+        assumption,
+      end,
+      have min_dist_pair_closer_than_q : get_min_dist_pair_in_neighbs p (grid_points c qs) ≤ some (p, q) := begin
+        exact h_min_dist_pair q hq.left,
+      end,
+      have min_dist_pair_closer_than_rec_res : get_min_dist_pair_in_neighbs p (grid_points c qs) ≤ aux (grid_points c qs) ps' := begin
+        apply option_pt_le_trans,
+        assumption,
+        exact hq.right.right,
+      end,
+      have min_dist_pair_closer_than_rec_res_bool :
+        point_le'
+          (get_min_dist_pair_in_neighbs p (grid_points c qs))
+          (aux (grid_points c qs) ps') = true :=
+        (point_le_iff_point_le'_eq_true (get_min_dist_pair_in_neighbs p (grid_points c qs)) (aux (grid_points c qs) ps')).mp min_dist_pair_closer_than_rec_res,
+      simp [aux, min_dist_pair_closer_than_rec_res_bool],
+      have md_pair_is_some: (∃ (x y : point), get_min_dist_pair_in_neighbs p (grid_points c qs) = some (x, y)) := begin
+        exact ((opt_point_le_some_implies_is_some (get_min_dist_pair_in_neighbs p (grid_points c qs)) p q).mp min_dist_pair_closer_than_q),
+      end,
+      cases md_pair_is_some with x md_pair_is_some',
+      cases md_pair_is_some' with y md_pair_is_some'',
+      rw [md_pair_is_some''],
+      have x_eq_p : x = p := begin
+        have md_pair_disj :
+          (∃ (z : point), get_min_dist_pair_in_neighbs p (grid_points c qs) = some (p, z)) ∨
+          get_min_dist_pair_in_neighbs p (grid_points c qs) = none := begin
+          exact (get_mdp_includes_center_pt p (grid_points c qs)),
+        end,
+        cases md_pair_disj,
+        {
+          cases md_pair_disj with z hz,
+          rw [md_pair_is_some''] at hz,
+          cases hz,
+          refl,
+        },
+        {
+          rw [md_pair_is_some''] at md_pair_disj,
+          cases md_pair_disj,
+        },
+      end,
+      rw [x_eq_p] at *,
 
-  apply closest_pair_in_ball_union.no_ball,
+      fapply closest_pair_in_ball_union.cons_ball_update,
+      exact (aux (grid_points c qs) ps'),
+      -- TODO make sure it's latching on to the right point for the metavariable
+      {
+        constructor,
+        {
+          rw [md_pair_is_some''] at min_dist_pair_closer_than_q,
+          apply closer_than_pt_in_ball_is_in_ball,
+          exact hq.left,
+          assumption,
+        },
+        constructor,
+        {
+          intros z z_in_ball,
+          have q_closer_than_z : ∥q - p∥ ≤ ∥z - p∥ := hq.right.left z z_in_ball,
+          have y_closer_than_q : ∥y - p∥ ≤ ∥q - p∥ := begin
+            rw [md_pair_is_some''] at min_dist_pair_closer_than_q,
+            simp [has_le.le, point_le] at min_dist_pair_closer_than_q ⊢,
+            rw point_norm_symm y p,
+            rw point_norm_symm q p,
+            assumption,
+          end,
+          exact le_trans y_closer_than_q q_closer_than_z,
+        },
+        {
+          rw [md_pair_is_some''] at min_dist_pair_closer_than_q,
+          apply option_pt_le_trans,
+          exact min_dist_pair_closer_than_q,
+          exact hq.right.right,
+        },
+      },
+      {
+        exact ih,
+      },
+    },
+    -- Case: there is *no* point within a ball of `p` that is closer than the
+    -- recursive result.
+    {
+      apply closest_pair_in_ball_union.cons_ball_no_update,
+      {
+        apply cp_in_ball_union_downward_closed,
+        exact ih,
+        apply aux_monotonic_in_pt_list,
+        exact c,
+      },
+      {
+        intros q q_in_ball,
+        simp [aux],
+        by_cases q_closer_than_aux : (some (p, q) ≤ aux (grid_points c qs) ps'),
+        {
 
-  -- Case ps = ps_hd :: ps_tl
-  apply closest_pair_in_ball_union.cons_ball,
+        },
+        {
 
-  intros exists_q_in_range_in_qs,
-
-  apply exists_q_in_range_implies_aux_finds_it,
-  assumption,
-
-  apply closest_pair_monotonic_in_pt_list,
-  sorry,
+        }
+        -- lemma get_min_dist_pair_correct :
+        --   ∀ (p : point) (g : grid_2D),
+        --     ∀ (x : point),
+        --       (pt_in_ball p x g.c g.ps) →
+        --       ((get_min_dist_pair_in_neighbs p g) ≤ some (p, x)) := begin
+        --   sorry
+        -- end
+      }
+    }
+  },
 end
 
 
@@ -331,7 +549,22 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     -- then `xy` contains the closest pair in all `ps`.
     ∃ (x y : point),
       xy = some (x, y) ∧ (closest_pair x y ps) := begin
+  intros c ps xy h_cp_help h_cp_in_ball_union,
+  induction ps,
+
+  -- [case closest_pair_in_ball_union.no_ball]
+  -- Navigate to contradiction.
+  cases h_cp_help,
+  cases h_cp_help_h,
+  cases h_cp_help_h_h,
+  cases h_cp_help_h_h_left,
+  cases h_cp_help_h_h_left_left,
+
   sorry,
+  -- rename [
+  --   h_cp_in_ball_union_p → p,
+  --   h_cp_in_ball_union_ps' → ps'
+  -- ],
 end
 
 
@@ -346,8 +579,11 @@ lemma aux_gives_closest_pair:
       aux (grid_points c ps) ps = some (p, q)
       ∧ closest_pair p q ps) := begin
   intros c ps cp_help,
-  -- TODO string together `closest_pair_in_ball_union_and_bounded_dist_implies_closest_pair` and `aux_finds_closest_pair_in_ball_union`.
-  sorry,
+  apply cp_with_help_and_cp_in_balls_implies_closest_pair,
+  assumption,
+  apply aux_finds_closest_pair_in_ball_union,
+  assumption,
+  simp,
 end
 
 

@@ -293,6 +293,15 @@ In principle, a norm instance could be provided whereby the output would be lift
 Then, perhaps we could transport theorems from normed spaces.
 This might work, but it could also introduce a lot of overhead, where we intersperse coercions between $\Z$ and $\R$ throughout our proofs.
 
+\section{Ergonomics}
+Because proof assistants are so sensitive to the syntactic phrasing of concepts, it is common that creating new notation has dramatic impacts on the ergonomics of proving things.
+
+\paragraph{Example.}
+One bit of notation that has helped considerably is defining $\leq$ between point pairs that could be null.
+Because the algorithm may return no pair---either when the distance hint is wrong or there are fewer than 2 points---the type signature is naturally expressed with an \textit{optional} return type.
+In the algorithm, we want to know when the recursive result pair is closer than any pair found in the current point's ball.
+Since either of these could actually be null, we have to case on their respective nullities.
+
 
 \bibliographystyle{plain}
 \bibliography{references}

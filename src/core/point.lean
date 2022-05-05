@@ -65,6 +65,62 @@ def point_norm (p : point) : ℤ :=
 
 notation `∥` e `∥` := point_norm e
 
+
+def point_le (xy zw : option (point × point)) : Prop :=
+  match (xy, zw) with
+  | (none, none) := true
+  | (none, some _) := false
+  | (some _, none) := true
+  | (some (x, y), some (z, w)) := ∥ x - y ∥ ≤ ∥ z - w ∥
+  end
+
+def point_le' (xy zw : option (point × point)) : bool :=
+  match (xy, zw) with
+  | (none, none) := true
+  | (none, some _) := false
+  | (some _, none) := true
+  | (some (x, y), some (z, w)) := ∥ x - y ∥ ≤ ∥ z - w ∥
+  end
+
+instance : has_le (option (point × point)) := ⟨point_le⟩
+
+lemma point_norm_symm :
+  ∀ (x y : point),
+    ∥x - y∥ = ∥y - x∥ := begin
+  sorry
+end
+
+-- instance (xy zw : option (point × point)) : decidable (point_le xy zw) :=
+--   begin
+--     cases xy;
+--     cases zw,
+--     exact (is_true true),
+--     simp [point_le],
+--   end
+--   match (xy, zw) with
+--   | (none, none) := is_true (by begin
+--       simp [point_le],
+
+--     end)
+--   | (none, some _) := false
+--   | (some _, none) := true
+--   | (some (x, y), some (z, w)) := ∥ x - y ∥ ≤ ∥ z - w ∥
+--   end
+--   if hp : p then
+--     if hq : q then is_true ⟨hp, hq⟩
+--     else is_false (assume h : p ∧ q, hq (and.right h))
+--   else is_false (assume h : p ∧ q, hp (and.left h))
+
+-- instance (pq rs : option (point × point)) : decidable (point_le pq rs) :=
+  -- sorry
+
+lemma option_pt_le_trans :
+  ∀ (pq xy zw : option (point × point)),
+    pq ≤ xy →
+    xy ≤ zw →
+    pq ≤ zw := sorry
+
+
 lemma int_nonneg_add :
   ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin
     sorry
