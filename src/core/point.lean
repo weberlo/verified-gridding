@@ -84,11 +84,39 @@ def point_le' (xy zw : option (point × point)) : bool :=
 
 instance : has_le (option (point × point)) := ⟨point_le⟩
 
+def point_lt (xy zw : option (point × point)) : Prop :=
+  match (xy, zw) with
+  | (none, none) := false
+  | (none, some _) := false
+  | (some _, none) := true
+  | (some (x, y), some (z, w)) := ∥ x - y ∥ < ∥ z - w ∥
+  end
+
+def point_lt' (xy zw : option (point × point)) : bool :=
+  match (xy, zw) with
+  | (none, none) := false
+  | (none, some _) := false
+  | (some _, none) := true
+  | (some (x, y), some (z, w)) := ∥ x - y ∥ < ∥ z - w ∥
+  end
+
+instance : has_lt (option (point × point)) := ⟨point_lt⟩
+
+lemma point_lt_iff_point_lt' :
+  ∀ (xy zw : option (point × point)),
+    point_lt xy zw ↔ ↥(point_lt' xy zw) := sorry
+
+    -- ↥(point_lt' (get_min_dist_pair_in_neighbs p (grid_points c qs)) (aux (grid_points c qs) ps'))
+
 lemma point_norm_symm :
   ∀ (x y : point),
     ∥x - y∥ = ∥y - x∥ := begin
   sorry
 end
+
+lemma le_iff_neg_lt :
+  ∀ (xy zw : option (point × point)),
+    xy ≤ zw ↔ ¬(xy > zw) := sorry
 
 -- instance (xy zw : option (point × point)) : decidable (point_le xy zw) :=
 --   begin
@@ -114,12 +142,36 @@ end
 -- instance (pq rs : option (point × point)) : decidable (point_le pq rs) :=
   -- sorry
 
+lemma option_pt_lt_trans :
+  ∀ (pq xy zw : option (point × point)),
+    pq < xy →
+    xy < zw →
+    pq < zw := sorry
+
 lemma option_pt_le_trans :
   ∀ (pq xy zw : option (point × point)),
     pq ≤ xy →
     xy ≤ zw →
     pq ≤ zw := sorry
 
+lemma option_pt_le_lt_trans :
+  ∀ (pq xy zw : option (point × point)),
+    pq ≤ xy →
+    xy < zw →
+    pq < zw := sorry
+
+lemma not_x_le_y_and_gt_y :
+  ∀ (x y : option (point × point)),
+    x ≤ y →
+    y < x →
+    false
+    := begin
+  sorry
+end
+
+lemma point_lt'_iff_point_lt :
+  ∀ (xy zw : option (point × point)),
+    ↥(point_lt' xy zw) ↔ xy < zw := sorry
 
 lemma int_nonneg_add :
   ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin

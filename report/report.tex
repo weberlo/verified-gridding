@@ -55,6 +55,9 @@ loganweb@mit.edu
 
 \maketitle
 
+\section{TODOs}
+Recall, Piotyr said what's most useful for him is statistics (breakdowns of code vs. proof) and ``war stories''.
+
 \section{Introduction}
 In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
 For a long time, proof assistants were thought of as unsatisfactory for formalizing undergraduate-level mathematics, let alone \textit{research}-level mathematics.
@@ -302,6 +305,29 @@ Because the algorithm may return no pair---either when the distance hint is wron
 In the algorithm, we want to know when the recursive result pair is closer than any pair found in the current point's ball.
 Since either of these could actually be null, we have to case on their respective nullities.
 
+
+\subsection{Decidable Propositions}
+The expression $p \leq q$ is a proposition, so we may be able to \textit{prove} it true.
+At the same time, for certain types of $p, q$ (e.g., $p, q \in \Z$), we have a decision procedure for the truth value of $p \leq q$, meaning we can \textit{program} with it in statements like $\text{if} p \leq q \text{then} 1 \text{else} 0$.
+Lean claims to have facilities for dissolving this dichotomy, but they are not well documented and led me through a lot of guesswork about how to use them.
+Ultimately, I made two syntactically identical definitions for $\mathsf{option} (\mathsf{point} \times \mathsf{point})$: one with a return type of $\mathsf{Prop}$ and one with a return type of $\mathsf{bool}$.
+
+\subsection{Syntax Sensitivity}
+The size of a proof depends a lot on how you've chosen to structure your code.
+If one definition in your code uses $\| p - q \|$ and another uses $\| q - p \|$, and you're trying to relate them, you will need to rewrite $\| p - q \|$ into $\| q - p \|$ via commutativity.
+Each mismatch of this sort in your code will result in an additional line in your proof, wherever the mismatched definitions need to be related.
+Each such inconsistency compounds and causes quite a large blowup in the size of proofs.
+
+There is technically automation that could make this a non-issue.
+For lemmas like commutativity, that are a workhorse of many theorems, the simplification tactic, \texttt{simp}, can be augmented to apply this lemma automatically.
+If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
+
+\subsection{The Reals}
+One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
+To work with the reals, all of your definitions become uncomputable, but this doesn't need to be the case.
+
+\section{Conclusion}
+We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
 
 \bibliographystyle{plain}
 \bibliography{references}
