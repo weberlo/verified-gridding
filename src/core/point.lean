@@ -118,6 +118,10 @@ lemma le_iff_neg_lt :
   ∀ (xy zw : option (point × point)),
     xy ≤ zw ↔ ¬(xy > zw) := sorry
 
+lemma neg_le_iff_lt :
+  ∀ (xy zw : option (point × point)),
+    ¬(xy ≤ zw) ↔ zw < xy := sorry
+
 -- instance (xy zw : option (point × point)) : decidable (point_le xy zw) :=
 --   begin
 --     cases xy;
@@ -172,6 +176,10 @@ end
 lemma point_lt'_iff_point_lt :
   ∀ (xy zw : option (point × point)),
     ↥(point_lt' xy zw) ↔ xy < zw := sorry
+
+lemma option_pt_le_some_eq_some :
+  ∀ (xy : option (point × point)) (z w : point),
+    xy ≤ some (z, w) → ∃ (x y : point), xy = some (x, y) := sorry
 
 lemma int_nonneg_add :
   ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin

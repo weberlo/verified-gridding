@@ -326,6 +326,10 @@ If the author learned how to use this automation sooner, perhaps some of this pa
 One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
 To work with the reals, all of your definitions become uncomputable, but this doesn't need to be the case.
 
+\subsection{Rewriting Under Binders}
+If you have a theorem that says $\forall x. 2x = x + x$, then you can't directly apply it to $\forall x. 2x + 2x$ to produce $\forall x. x + x + x + x$.
+You need to start a subproof, introduce the variable $x$, apply the theorem, then close the subproof.
+
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
 
