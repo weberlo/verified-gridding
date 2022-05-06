@@ -655,23 +655,31 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
 end
 
 
-
 lemma aux_gives_closest_pair:
-  ∀ (c : ℕ⁺) (ps : list point),
+  ∀ (g : grid_2D),
     -- If there's a closest pair within distance `c`,
     (∃ (p q : point),
-      cp_with_help p q ps c) →
+      cp_with_help p q g.ps g.c) →
     -- TODO we'll need a supposition that the closest pair is within distance `c`
     (∃ (p q : point),
-      aux (grid_points c ps) ps = some (p, q)
-      ∧ closest_pair p q ps) := begin
-  intros c ps cp_help,
+      aux g g.ps = some (p, q)
+      ∧ closest_pair p q g.ps) := begin
+  intros g cp_help,
   apply cp_with_help_and_cp_in_balls_implies_closest_pair,
   assumption,
   apply aux_finds_closest_pair_in_ball_union,
-  assumption,
   simp,
 end
+
+
+lemma grid_pts_dot_c_with_c_eq_c :
+  ∀ (c : ℕ⁺) (ps : list point),
+    (grid_points c ps).c = c := sorry
+
+lemma grid_pts_dot_ps_with_ps_eq_ps :
+  ∀ (c : ℕ⁺) (ps : list point),
+    (grid_points c ps).ps = ps := sorry
+
 
 
 -- TODO see if there's a simpler way to phrase this.
@@ -691,7 +699,30 @@ begin
     (∃ (p q : point),
         aux (grid_points c ps) ps = some (p, q)
         ∧ closest_pair p q ps) := begin
+    have expand_ps : aux (grid_points c ps) ps = aux (grid_points c ps) (grid_points c ps).ps := begin
+      congr,
+      symmetry,
+      apply grid_pts_dot_ps_with_ps_eq_ps,
+    end,
+    rw [expand_ps],
+    have dumb_rw :
+      (∃ (p q : point), aux (grid_points c ps) (grid_points c ps).ps = some (p, q) ∧ closest_pair p q (grid_points c ps).ps) →
+      (∃ (p q : point), aux (grid_points c ps) (grid_points c ps).ps = some (p, q) ∧ closest_pair p q ps) := begin
+      intros h,
+      cases h with p h',
+      cases h' with q h'',
+      fapply exists.intro,
+      exact p,
+      fapply exists.intro,
+      exact q,
+      constructor,
+      exact h''.left,
+      rw [grid_pts_dot_ps_with_ps_eq_ps] at h'',
+      exact h''.right,
+    end,
+    apply dumb_rw,
     apply aux_gives_closest_pair,
+    rw [grid_pts_dot_ps_with_ps_eq_ps, grid_pts_dot_c_with_c_eq_c],
     assumption,
   end,
   cases aux_gives_closest,

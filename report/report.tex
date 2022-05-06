@@ -61,26 +61,35 @@ Recall, Piotyr said what's most useful for him is statistics (breakdowns of code
 \section{Introduction}
 In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
 For a long time, proof assistants were thought of as unsatisfactory for formalizing undergraduate-level mathematics, let alone \textit{research}-level mathematics.
-This image began to change when a challenge by accomplished mathematician, Peter Scholze, was proposed and taken up by the Lean community.
-This challenge became known as \href{https://xenaproject.wordpress.com/2020/12/05/liquid-tensor-experiment/}{The Liquid Tensor Experiment}.
-
+This image began to change when a challenge by accomplished mathematician, Peter Scholze, was proposed: \href{https://xenaproject.wordpress.com/2020/12/05/liquid-tensor-experiment/}{The Liquid Tensor Experiment}.
+Within 6 months, the Lean community had completed the most import aspects of the proof, exceeding Scholze's expectations.
 
 % No single innovation
 The rise of Lean cannot be explained by any significant \textit{technological} innovation---it was a \textit{cultural} innovation.
 % TODO this makes it sound like Lean isn't sound
-The most relevant comparison is to the Coq proof assistant, which, in contrast to Lean, has emphasized sound, type-theoretic principles from its conception.
-Lean has instead focused on working backwards from how mathematicians prefer to work.
-As a result, Lean has incorporated quotient types and embraces classical mathematics, which uses the law of excluded middle, destroying computational properties.
-With that being said.
+The most relevant comparison is to the Coq proof assistant, which has emphasized sound, type-theoretic principles since its conception.
+Lean instead focuses on directly accomodating the workflows of mathematicians, embracing language features that elude type-theoretic grounding (e.g., quotients) and that destroy computational properties (e.g., the law of excluded middle).
+
+Resulting from its goals,
+Lean has attracted a number of mathematicians, who have formalized a substantial body of undergraduate-level mathematics in a library known as \href{https://leanprover-community.github.io}{Mathlib}.
+
+
+% As a result, Lean encourages the use of classical logic.
+% A notable point of contrast that arises from this stated goal is that classical logic (i.e., using the law of excluded middle)
+% As a result, Lean has incorporated quotient types and embraces classical mathematics, which uses the law of excluded middle, destroying computational properties.
+% With that being said.
 
 
 % TODO doesn't seem like this is true after reading into it. seems more like the emphasis on the axiom of choice and baked-in quotient types was important.
-It was a plethora of performance engineering and ergonomic improvements that made Lean an attractive platform for the formalization of mathematics.
+% It was a plethora of performance engineering and ergonomic improvements that made Lean an attractive platform for the formalization of mathematics.
 
-In one of the earlier lectures, a student asked Professor Indyk how some of algorithm analysis we had done could be made formal.
-He replied with an anecdote that a student once tried to formally verify a sweep algorithm in his class.
-The student restricted to integers, then to 1 dimension, and ended up proving that you could sort a list of integers.
-The author took this as a challenge and decided to assess the current state of formal verification, given the existence of libraries like Mathlib.
+Earlier this term, Professor Indyk mentioned the difficulties a past student had when verifying one of the algorithms from lecture.
+In this project, my goal is to survey the state of formal verification as it pertains to geometric computing.
+The question I seek to answer is: how much of the proof burden does Mathlib alleviate in the process of formal verification?
+
+% In an earlier lecture this term, a student asked Professor Indyk how some of the algorithm analysis we had done could be made formal.
+% He replied with an anecdote that a student once tried to formally verify an algorithm in his class.
+% The author took this as a challenge and decided to assess the current state of formal verification, given the existence of libraries like Mathlib.
 
 \section{The Problem Specification}
 
@@ -320,7 +329,10 @@ Each such inconsistency compounds and causes quite a large blowup in the size of
 
 There is technically automation that could make this a non-issue.
 For lemmas like commutativity, that are a workhorse of many theorems, the simplification tactic, \texttt{simp}, can be augmented to apply this lemma automatically.
-If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
+However, it seems the reductions performed by this tactic are not performed when applying a theorem or a lemma, leaving the ergonomic issue unsolved.
+% If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
+
+
 
 \subsection{The Reals}
 One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
@@ -329,6 +341,11 @@ To work with the reals, all of your definitions become uncomputable, but this do
 \subsection{Rewriting Under Binders}
 If you have a theorem that says $\forall x. 2x = x + x$, then you can't directly apply it to $\forall x. 2x + 2x$ to produce $\forall x. x + x + x + x$.
 You need to start a subproof, introduce the variable $x$, apply the theorem, then close the subproof.
+
+\subsection{Carrying Data Only for Proofs}
+In regular programming, our grid structure should just consist of a hash table.
+However, when we need to prove properties of our grid structure, we need to carry around the list of points that generated it.
+If we need to show that the point returned by searching neighboring cells actually exists in the input list, we need the input list nearby to even state that property.
 
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
