@@ -360,8 +360,17 @@ However, we would need to transport these theorems on $\| \cdot \|_\R$ back to $
 
 We would face the same difficulties if we chose to use the rationals, because they are also not closed under square roots.
 
+\subsection{Losing Sight of the Goal}
+Working at such a low level of abstraction and proving statements in the nitty gritty details makes it quite easy to forget why you're proving something.
+There have been multiple times where I've gotten in the zone proving something, then realized after a long struggle that the lemma actually isn't quite correct.
+
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
+
+\paragraph{Alternative Ending.}
+Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.
+The simpler functions in your algorithm can be left with their lemmas unproven.
+Proof assistants can provide a conceptual framework to verify the high-level components of your algorithm and tame the uncertainty there.
 
 \bibliographystyle{plain}
 \bibliography{references}

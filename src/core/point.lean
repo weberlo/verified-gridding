@@ -158,6 +158,11 @@ lemma option_pt_le_trans :
     xy ≤ zw →
     pq ≤ zw := sorry
 
+lemma option_pt_le_symm :
+  ∀ (pq : option (point × point)) (x y : point),
+    pq ≤ some (x, y) →
+    pq ≤ some (y, x) := sorry
+
 lemma option_pt_le_lt_trans :
   ∀ (pq xy zw : option (point × point)),
     pq ≤ xy →
