@@ -173,6 +173,12 @@ lemma not_x_le_y_and_gt_y :
   sorry
 end
 
+lemma int_le_trans :
+  ∀ (x y z : ℤ),
+    x ≤ y →
+    y ≤ z →
+    x ≤ z
+
 lemma point_lt'_iff_point_lt :
   ∀ (xy zw : option (point × point)),
     ↥(point_lt' xy zw) ↔ xy < zw := sorry

@@ -159,14 +159,21 @@ def find_closest_pair
 #reduce ({1, 2} : set ℕ) = ({})
 
 
+-- def closest_pair (p q : point) (ps : list point) : Prop :=
+--   (p ∈ ps) ∧
+--   (q ∈ ps) ∧
+--   (p ≠ q) ∧
+--   (∀ (r s : point),
+--       (((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ = ∥ r - s ∥)) ∧
+--      (¬((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ < ∥ r - s ∥)))
+
 def closest_pair (p q : point) (ps : list point) : Prop :=
   (p ∈ ps) ∧
   (q ∈ ps) ∧
   (p ≠ q) ∧
-  (∀ (r s : point),
-      (((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ = ∥ r - s ∥)) ∧
-     (¬((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ < ∥ r - s ∥)))
-
+  (∀ (r s : point), r ≠ s → ∥p - q∥ ≤ ∥r - s∥)
+    --   (((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ = ∥ r - s ∥)) ∧
+    --  (¬((p = r ∧ q = s) ∨ (p = s ∧ q = r)) ↔ (∥ p - q ∥ < ∥ r - s ∥)))
 
 /-
   TODO the definitions might be useful if proofs become too cumbersome.
@@ -624,6 +631,26 @@ lemma aux_finds_closest_pair_in_ball_union:
   },
 end
 
+lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
+  ∀ (c : ℕ⁺) (p q : point) (xy : option (point × point)) (ps qs : list point),
+    ps ⊆ qs →
+    p ∈ ps →
+    q ∈ ps →
+    ∥p - q∥ ≤ c →
+    closest_pair_in_ball_union c qs xy ps →
+    xy ≤ some (p, q) := sorry
+
+lemma in_sublist_in_list :
+  ∀ (p : point) (ps qs : list point),
+    p ∈ ps →
+    ps ⊆ qs →
+    p ∈ qs := sorry
+
+lemma some_cp_in_balls_in_pt_list_and_neq :
+  ∀ (c : ℕ⁺) (x y : point) (xy : option (point × point)) (ps : list point),
+    xy = some (x, y) →
+    closest_pair_in_ball_union c ps xy ps →
+    x ∈ ps ∧ y ∈ ps ∧ x ≠ y := sorry
 
 lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
   ∀ (c : ℕ⁺) (ps : list point) (xy : option (point × point)),
@@ -637,21 +664,45 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     ∃ (x y : point),
       xy = some (x, y) ∧ (closest_pair x y ps) := begin
   intros c ps xy h_cp_help h_cp_in_ball_union,
-  induction ps,
-
-  -- [case closest_pair_in_ball_union.no_ball]
-  -- Navigate to contradiction.
-  cases h_cp_help,
-  cases h_cp_help_h,
-  cases h_cp_help_h_h,
-  cases h_cp_help_h_h_left,
-  cases h_cp_help_h_h_left_left,
-
+  cases h_cp_help with p h_cp_help',
+  cases h_cp_help' with q h_cp_help'',
+  unfold cp_with_help closest_pair at h_cp_help'',
+  have xy_leq_pq : xy ≤ some (p, q) := begin
+    apply cp_in_ball_union_closer_than_all_pts_in_dist_c,
+    refl,
+    exact h_cp_help''.left.left,
+    exact h_cp_help''.left.right.left,
+    exact h_cp_help''.right.right,
+    exact h_cp_in_ball_union,
+  end,
+  have xy_is_some : ∃ (x y : point), xy = some (x, y) := begin
+    apply option_pt_le_some_eq_some,
+    exact xy_leq_pq,
+  end,
+  cases xy_is_some with x xy_is_some',
+  cases xy_is_some' with y xy_is_some'',
+  have x_sub_y_leq_p_sub_q : ∥x - y∥ ≤ ∥p - q∥ := begin
+    rw [xy_is_some''] at xy_leq_pq,
+    simp [has_le.le, point_le] at xy_leq_pq ⊢,
+    exact xy_leq_pq,
+  end,
+  have xy_closest : closest_pair x y ps := begin
+    unfold closest_pair,
+    have xy_in_pt_list_and_neq : x ∈ ps ∧ y ∈ ps ∧ x ≠ y := begin
+      apply some_cp_in_balls_in_pt_list_and_neq,
+      exact xy_is_some'',
+      exact h_cp_in_ball_union,
+    end,
+    repeat {split},
+    { exact xy_in_pt_list_and_neq.left, },
+    { exact xy_in_pt_list_and_neq.right.left, },
+    { exact xy_in_pt_list_and_neq.right.right, },
+    {
+      intros r s r_neq_s,
+      sorry,
+    }
+  end,
   sorry,
-  -- rename [
-  --   h_cp_in_ball_union_p → p,
-  --   h_cp_in_ball_union_ps' → ps'
-  -- ],
 end
 
 
@@ -688,10 +739,10 @@ theorem find_closest_pair_correct :
     -- If there's a closest pair within distance `c`
     (∃ (p q : point),
       cp_with_help p q ps c) →
-      -- then our algorithm finds the closest pair.
-      (∃ (p q : point),
-        (find_closest_pair c ps) = some (p, q) ∧
-        closest_pair p q ps) :=
+    -- then our algorithm finds a closest pair.
+    (∃ (p q : point),
+      (find_closest_pair c ps) = some (p, q) ∧
+      closest_pair p q ps) :=
 begin
   intros c ps exists_pair,
 
@@ -725,63 +776,52 @@ begin
     rw [grid_pts_dot_ps_with_ps_eq_ps, grid_pts_dot_c_with_c_eq_c],
     assumption,
   end,
-  cases aux_gives_closest,
-  cases aux_gives_closest_h,
+  cases aux_gives_closest with p aux_gives_closest,
+  cases aux_gives_closest with q aux_gives_closest,
 
   fapply exists.intro,
-  exact aux_gives_closest_w,
+  exact p,
   fapply exists.intro,
-  exact aux_gives_closest_h_w,
+  exact q,
 
   simp [find_closest_pair],
   apply and.intro,
-  fapply exists.intro,
-  exact aux_gives_closest_w,
-  fapply exists.intro,
-  exact aux_gives_closest_h_w,
-  apply and.intro,
-  exact aux_gives_closest_h_h.left,
+  {
+    fapply exists.intro,
+    exact p,
+    fapply exists.intro,
+    exact q,
+    apply and.intro,
+    exact aux_gives_closest.left,
 
-  have aux_closest_dist_leq_c : (∥aux_gives_closest_w - aux_gives_closest_h_w∥ ≤ ↑c) := begin
-    cases exists_pair,
-    cases exists_pair_h,
-
-    rename [
-      aux_gives_closest_w → x,
-      aux_gives_closest_h_w → y,
-      exists_pair_w → z,
-      exists_pair_h_w → w
-    ],
-    have cp_xy : closest_pair x y ps := aux_gives_closest_h_h.right,
-    have cp_zw : closest_pair z w ps := exists_pair_h_h.left,
-    have xy_eq_zw : ((x = z ∧ y = w) ∨ (x = w ∧ y = z)) := begin
-      apply two_closest_pairs_implies_same,
-      assumption,
-      assumption,
+    have aux_closest_dist_leq_c : (∥p - q∥ ≤ ↑c) := begin
+      cases exists_pair with p' exists_pair,
+      cases exists_pair with q' exists_pair,
+      have aux_closer_than_cp : ∥p - q∥ ≤ ∥p' - q'∥ := begin
+        unfold closest_pair at aux_gives_closest,
+        apply aux_gives_closest.right.right.right.right,
+        exact exists_pair.left.right.right.left,
+      end,
+      apply int_le_trans,
+      exact aux_closer_than_cp,
+      exact exists_pair.right.right,
     end,
-    cases xy_eq_zw;
-    cases xy_eq_zw;
-    rw [←xy_eq_zw_left, ←xy_eq_zw_right] at exists_pair_h_h,
 
-    exact exists_pair_h_h.right.right,
+    by_cases (↑c < ∥p - q∥),
 
-    rw [point_norm_sub_comm x y],
-    exact exists_pair_h_h.right.right,
-  end,
-
-  by_cases (↑c < ∥aux_gives_closest_w - aux_gives_closest_h_w∥),
-
-  rw [←coe_to_ℕ_then_ℤ_eq_coe_to_ℤ] at h,
-  simp [h],
-  fapply not_leq_and_gt,
-  exact (aux_gives_closest_w - aux_gives_closest_h_w),
-  exact c,
-  apply and.intro,
-  exact aux_closest_dist_leq_c,
-  exact h,
-
-  rw [←coe_to_ℕ_then_ℤ_eq_coe_to_ℤ] at h,
-  simp [h],
-  exact aux_gives_closest_h_h.right,
+    rw [←coe_to_ℕ_then_ℤ_eq_coe_to_ℤ] at h,
+    simp [h],
+    fapply not_leq_and_gt,
+    exact (p - q),
+    exact c,
+    apply and.intro,
+    exact aux_closest_dist_leq_c,
+    exact h,
+    rw [←coe_to_ℕ_then_ℤ_eq_coe_to_ℤ] at h,
+    simp [h],
+  },
+  {
+    exact aux_gives_closest.right,
+  }
 end
 

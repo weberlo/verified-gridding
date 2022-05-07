@@ -91,6 +91,8 @@ The question I seek to answer is: how much of the proof burden does Mathlib alle
 % He replied with an anecdote that a student once tried to formally verify an algorithm in his class.
 % The author took this as a challenge and decided to assess the current state of formal verification, given the existence of libraries like Mathlib.
 
+The concrete goal I set out with on this project was to implement and formally verify the closest pair (with help) and helper finder algorithms.
+
 \section{The Problem Specification}
 
 \begin{minted}{lean}
@@ -342,10 +344,21 @@ To work with the reals, all of your definitions become uncomputable, but this do
 If you have a theorem that says $\forall x. 2x = x + x$, then you can't directly apply it to $\forall x. 2x + 2x$ to produce $\forall x. x + x + x + x$.
 You need to start a subproof, introduce the variable $x$, apply the theorem, then close the subproof.
 
+There may be a tactic that encapsulates this use case, but that's missing the point.
+Intuitively, we should be able to rewrite under binders, and it should all be under the same \texttt{rw} tactic.
+
 \subsection{Carrying Data Only for Proofs}
 In regular programming, our grid structure should just consist of a hash table.
 However, when we need to prove properties of our grid structure, we need to carry around the list of points that generated it.
 If we need to show that the point returned by searching neighboring cells actually exists in the input list, we need the input list nearby to even state that property.
+
+\subsection{Lack of Applicable Lemmas}
+Because we made the decision to use integers instead of the reals, the norm we defined is not real-valued and does not satisfy the type signature of a normed space in Mathlib.  \todo{Check this is true.}
+In principle, we could lift our norm $\| \cdot \| : \Z \to \Z$ to be real-valued $\| \cdot \|_\R : \Z \to \R$ via an inclusion.
+Then, we could prove $\| \cdot \|_\R$ is a norm, giving access to theorems for normed spaces.
+However, we would need to transport these theorems on $\| \cdot \|_\R$ back to $\| \cdot \|$, meaning we would need to mediate every theorem application with a transport theorem---a conceptually unsatisfactory solution.
+
+We would face the same difficulties if we chose to use the rationals, because they are also not closed under square roots.
 
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
