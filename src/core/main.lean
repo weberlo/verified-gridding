@@ -664,25 +664,25 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     ∃ (x y : point),
       xy = some (x, y) ∧ (closest_pair x y ps) := begin
   intros c ps xy h_cp_help h_cp_in_ball_union,
-  cases h_cp_help with p h_cp_help',
-  cases h_cp_help' with q h_cp_help'',
-  unfold cp_with_help closest_pair at h_cp_help'',
+  cases h_cp_help with p h_cp_help,
+  cases h_cp_help with q h_cp_help,
+  unfold cp_with_help closest_pair at h_cp_help,
   have xy_leq_pq : xy ≤ some (p, q) := begin
     apply cp_in_ball_union_closer_than_all_pts_in_dist_c,
     refl,
-    exact h_cp_help''.left.left,
-    exact h_cp_help''.left.right.left,
-    exact h_cp_help''.right.right,
+    exact h_cp_help.left.left,
+    exact h_cp_help.left.right.left,
+    exact h_cp_help.right.right,
     exact h_cp_in_ball_union,
   end,
   have xy_is_some : ∃ (x y : point), xy = some (x, y) := begin
     apply option_pt_le_some_eq_some,
     exact xy_leq_pq,
   end,
-  cases xy_is_some with x xy_is_some',
-  cases xy_is_some' with y xy_is_some'',
+  cases xy_is_some with x xy_is_some,
+  cases xy_is_some with y xy_is_some,
   have x_sub_y_leq_p_sub_q : ∥x - y∥ ≤ ∥p - q∥ := begin
-    rw [xy_is_some''] at xy_leq_pq,
+    rw [xy_is_some] at xy_leq_pq,
     simp [has_le.le, point_le] at xy_leq_pq ⊢,
     exact xy_leq_pq,
   end,
@@ -690,7 +690,7 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     unfold closest_pair,
     have xy_in_pt_list_and_neq : x ∈ ps ∧ y ∈ ps ∧ x ≠ y := begin
       apply some_cp_in_balls_in_pt_list_and_neq,
-      exact xy_is_some'',
+      exact xy_is_some,
       exact h_cp_in_ball_union,
     end,
     repeat {split},
@@ -699,9 +699,19 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     { exact xy_in_pt_list_and_neq.right.right, },
     {
       intros r s r_neq_s,
-      sorry,
+      have pq_le_rs : ∥p - q∥ ≤ ∥r - s∥ := begin
+        apply h_cp_help.left.right.right.right,
+        exact r_neq_s,
+      end,
+      apply int_le_trans,
+      exact x_sub_y_leq_p_sub_q,
+      exact pq_le_rs,
     }
   end,
+  fapply exists.intro,
+  exact x,
+  fapply exists.intro,
+  exact y,
   sorry,
 end
 
