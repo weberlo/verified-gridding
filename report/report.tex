@@ -97,15 +97,10 @@ My background is not in formal verification, but I do have a background in progr
 As someone who has been skeptical of the efficacy of verification, part of my goal with this project is to give perspective to outsiders and tell them what they should expect, without sugar-coating it and saying ``you'll get used to it''.
 
 \section{The Problem Specification}
-
 \begin{minted}{lean}
 def closest_pair (p q : point) (ps : list point) : Prop :=
-  (p ∈ ps) ∧
-  (q ∈ ps) ∧
-  (p ≠ q) ∧
-  (∀ (r s : point),
-      (same_pair (p, q) (r, s) ↔ ∥ p - q ∥ = ∥ r - s ∥) ∧
-     (¬(same_pair (p, q) (r, s)) ↔ ∥ p - q ∥ < ∥ r - s ∥))
+  (p ∈ ps) ∧ (q ∈ ps) ∧ (p ≠ q) ∧
+  (∀ (r s : point), r ≠ s → ∥p - q∥ ≤ ∥r - s∥)
 
 def closest_pair_with_help (p q : point) (ps : list point) (c : ℕ⁺) : Prop :=
   (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)
@@ -126,6 +121,9 @@ theorem find_closest_pair_correct :
   sorry
 end
 \end{minted}
+
+\section{Proof Strategy}
+\todo{Give top-down proof strategy spiel}
 
 
 \section{Integer Grids}
@@ -169,110 +167,6 @@ inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
 \end{minted}
 
 \section{Admitted Lemmas}
-\begin{minted}{lean}
-lemma not_x_lt_y_and_gt_y :
-  ∀ (x y : ℤ),
-    ¬(x < y ∧ y < x) := begin
-  sorry
-end
-
-lemma not_lt_and_not_gt_implies_eq :
-  ∀ (x y : ℤ), ¬(x < y) → ¬(y < x) → x = y := begin
-  sorry
-end
-
-lemma int_nonneg_add :
-  ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin
-    sorry
-end
-
-lemma int_x_times_x_nonneg :
-  ∀ (x : ℤ), int.nonneg (x * x) := begin
-    sorry
-end
-
-lemma nonneg_iff_leq_zero :
-  ∀ (x : ℤ), int.nonneg x ↔ 0 ≤ x := begin
-    sorry
-  end
-\end{minted}
-
-\newpage
-\begin{minted}{lean}
-lemma a_nonneg_times_b_nonneq_means_a_times_b_nonneg :
-  ∀ (a b : ℤ), int.nonneg a → int.nonneg b → int.nonneg (a * b) := begin
-    sorry
-end
-
-lemma lift_nat_nonneg :
-  ∀ (n : ℕ), int.nonneg ↑n := begin
-    sorry
-end
-
-lemma x_div_plus_y_div_eq_x_plus_y_div_minus_sum_mod_div :
-  ∀ (x y z : ℤ), x/z + y/z = (x + y)/z - (x % z + y % z) := begin
-    sorry
-  end
-
-lemma x_div_y_times_y :
-  ∀ (x y : ℤ), (x / y) * y = x - x % y := begin
-    sorry
-end
-
-lemma point_norm_add_comm :
-  ∀ (p q : point), ∥ p + q ∥ = ∥ q + p ∥ := begin
-    sorry
-end
-
-lemma point_norm_sub_comm :
-  ∀ (p q : point), ∥ p - q ∥ = ∥ q - p ∥ := begin
-    sorry
-end
-
-lemma not_leq_and_gt : ∀ (p : point) (n : ℤ),
-  ¬((∥p∥ ≤ n) ∧ (n < ∥p∥)) := begin
-    sorry
-end
-
-lemma exists_closest_pair_implies_nonempty :
-  ∀ (ps : list point), (∃ (p q : point), closest_pair p q ps) → ps ≠ [] :=
-begin
-  sorry
-end
-
-lemma exists_q_in_range_implies_aux_finds_it:
-  ∀ (q : point) (qs' : list point) (ps : list point) (c : ℕ⁺),
-    (∃ (p : point), p ∈ ps ∧ ∥p - q∥ ≤ ↑c) →
-    (∃ (x y : point),
-      aux (grid_points c ps) (q :: qs') = some (x, y) ∧
-      ∀ (p : point),
-        p ∈ ps →
-        ∥p - q∥ ≤ ↑c →
-        ∥x - y∥ ≤ ∥p - q∥) := begin
-  sorry
-end
-
-lemma cp_with_help_implies_eps_separated :
-  ∀ (p q : point) (ps : list point) (c : ℕ⁺),
-    cp_with_help p q ps c → eps_separated ps 1 := begin
-  sorry
-end
-
-lemma get_neighbs_contains_all_within_ball :
-  ∀ (c : ℕ⁺) (ps : list point) (p q : point) (g : grid_2D),
-    (∥ p - q ∥ ≤ c) → (q ∈ get_neighbs p g) := begin
-  sorry
-end
-
-lemma get_min_dist_point_in_neighbs_correct :
-  ∀ (p q : point) (g : grid_2D),
-    ∥ p - q ∥ ≤ g.c →
-      ∃ (x : point),
-        get_min_dist_point_in_neighbs p g = some (x, p) ∧
-        ∥ p - x ∥ ≤ ∥ p - q ∥ := begin
-  sorry
-end
-\end{minted}
 
 \subsection{Likely Existing in Mathlib.}
 The author believes most admitted lemmas about the integers can be mapped onto existing proofs in Mathlib.
@@ -362,6 +256,11 @@ For lemmas like commutativity, that are a workhorse of many theorems, the simpli
 However, it seems the reductions performed by this tactic are not performed when applying a theorem or a lemma, leaving the ergonomic issue unsolved.
 % If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
 
+Here's another explanation.
+If you have a concept that's latent in your code (e.g., being the closest pair within a ball), but you haven't reified it, you might have it written as $(q \in \mathcal{B}(p, c) \cap P) \wedge (\forall x. (x \in \mathcal{B}(p, c) \cap P) \Rightarrow \| p - q \| \leq \| p - x \|)$ but you might have it commuted in another location.
+Now, every time you need to relate properties from those two locations, you need to recommute, but if you have them refactored under a definition, then you can identify them as being the same concept and express them in terms of that definition.
+\todo{Add a table mapping mathematical notation to the name of the corresponding predicate}
+\todo{Write about how unicode is nice in the ergonomics section}
 
 
 \subsection{The Reals}
@@ -394,6 +293,21 @@ There have been multiple times where I've gotten in the zone proving something, 
 
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
+
+\paragraph{Benefits.}
+Verification forces you to write \textbf{very} clean code and develop concepts/notation that is natural for the algorithm.
+There were multiple match statements in the main body originally, casing on whether we received a point in the current point's ball.
+The cleaner alternative was to lift operations on pairs of points to operate on \textit{nullable} pairs of points.
+As a result, the main body of our algorithm is now only 6 lines long.
+
+Proof assistants implicitly enforce the software engineering principle that every function should do exactly one thing.
+Originally, the core function \texttt{aux} iterated over the list of points, and in the recursive body, it checked all points in the hypercube of radius $\sqrt{c}^\Z$.
+
+When you have multiple iterations within a method, it often corresponds to nested induction.
+\todo{It's not super clear here, because the get\_neighbs function uses folds and maps, so it's not directly iterating and I'm not sure whether you need induction to prove facts about those}
+Proofs on this function would have required induction (probably).
+Induction is one way of linearizing our reasoning, so it almost corresponds to the statement that you should have every function be linear in one variable or something like that.
+\todo{Emphasize somewhere the sheer number of induction proofs you need in proof assistants, and how it's all just induction.}
 
 \paragraph{Alternative Ending.}
 Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.

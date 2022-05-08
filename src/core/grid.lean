@@ -157,3 +157,12 @@ theorem close_in_grid_means_close_in_space :
     apply lift_nat_nonneg,
     simp [int.nonneg],
   end
+
+
+lemma grid_pts_dot_c_is_arg_c :
+  ∀ (c : ℕ⁺) (qs : list point),
+    (grid_points c qs).c = c := sorry
+
+lemma grid_pts_dot_ps_is_arg_ps :
+  ∀ (c : ℕ⁺) (ps : list point),
+    (grid_points c ps).ps = ps := sorry
