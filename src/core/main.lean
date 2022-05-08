@@ -299,7 +299,7 @@ inductive closest_pair_in_ball_union (c : ℕ⁺) (qs : list point) : option (po
     (q : point) :
     (
       pt_in_ball p q c qs ∧
-      (∀ (x : point), (pt_in_ball p x c qs) → ∥ q - p ∥ ≤ ∥ x - p ∥) ∧
+      (∀ (x : point), (pt_in_ball p x c qs) → ∥q - p∥ ≤ ∥x - p∥) ∧
       some (p, q) < xy
     ) →
     closest_pair_in_ball_union xy ps' →
@@ -639,7 +639,9 @@ lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
     ((r ∈ ps ∧ pt_in_ball r s c qs) ∨ (s ∈ ps ∧ pt_in_ball s r c qs)) →
     closest_pair_in_ball_union c qs xy ps →
     xy ≤ some (r, s) := begin
-  intros c r s xy ps qs ps_subset_qs r_in_qs s_in_qs rs_in_ball xy_cp_in_balls,
+  intros
+    c r s xy ps qs
+    ps_subset_qs r_in_qs s_in_qs rs_in_ball xy_cp_in_balls,
   induction ps,
   {
     cases rs_in_ball,
@@ -652,6 +654,7 @@ lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
     rename [ps_hd → p, ps_tl → ps'],
     cases xy_cp_in_balls,
     {
+      -- Case [no_update]
       rename [
         xy_cp_in_balls_ᾰ → xy_cp_in_balls',
         xy_cp_in_balls_ᾰ_1 → xy_cp_in_ps_hd_ball
@@ -716,6 +719,7 @@ lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
       }
     },
     {
+      -- Case [update]
       rename [
         xy_cp_in_balls_q → q,
         xy_cp_in_balls_xy → xy',
@@ -724,7 +728,47 @@ lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
       ],
       cases q_closest_in_ball_and_le_xy' with q_in_ball q_closest_and_le_xy',
       cases q_closest_and_le_xy' with q_closest_in_ball q_le_xy',
-      sorry
+      cases rs_in_ball,
+      {
+        cases rs_in_ball with r_in_ps s_in_r_ball,
+        cases r_in_ps,
+        {
+          rw [r_in_ps] at *,
+          simp [has_le.le, point_le] at *,
+          rw [point_norm_sub_comm p q, point_norm_sub_comm p s],
+          apply q_closest_in_ball,
+          exact s_in_r_ball,
+        },
+        {
+          -- have p_in_qs_and_ps'_subset_qs : p ∈ qs ∧ ps' ⊆ qs := begin
+          --   apply list.cons_subset.mp,
+          --   assumption,
+          -- end,
+          cases xy_cp_in_balls,
+          {
+            sorry,
+          },
+          {
+
+          }
+          -- apply ps_ih,
+          -- {
+          --   exact this.right,
+          -- },
+          -- {
+          --   apply or.inl,
+          --   split,
+          --   exact r_in_ps,
+          --   exact s_in_r_ball,
+          -- },
+          -- {
+
+
+          -- },
+        }
+      },
+      {
+      }
     },
   },
 end
