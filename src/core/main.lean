@@ -11,20 +11,30 @@ import core.point
 import core.grid
 
 
-def min_dist_point_aux : list (point × ℚ) → option (point × ℚ)
-| [] := none
-| ((p, d) :: pds) :=
-    match min_dist_point_aux pds with
-    | none :=
-        some (p, d)
-    | some (p', d') :=
-        some (if d < d' then (p, d) else (p', d'))
-    end
+def pt_in_ball (p q : point) (c : ℕ⁺) (qs : list point) : Prop :=
+  q ∈ qs ∧
+  q ≠ p ∧
+  ∥q - p∥ ≤ c
 
-def min_dist_point : list (point × ℚ) → option point
-| [] := none
-| pds := min_dist_point_aux pds >>= (λ (p : point × ℚ), some p.1)
+-- def min_dist_pair_aux : list (point × ℚ) → option (point × ℚ)
+-- | [] := none
+-- | ((p, d) :: pds) :=
+--     match min_dist_pair_aux pds with
+--     | none :=
+--         some (p, d)
+--     | some (p', d') :=
+--         some (if d < d' then (p, d) else (p', d'))
+--     end
 
+-- def min_dist_pair : list (point × ℚ) → option point
+-- | [] := none
+-- | pds := min_dist_pair_aux pds >>= (λ (p : point × ℚ), some p.1)
+
+def min_dist_pair (p : point) : list point → option (point × point)
+| [] := none
+| (q :: ps') :=
+    let pq' := min_dist_pair ps' in
+    if point_lt' (p, q) pq' then some (p, q) else pq'
 
 /-
   All points within distance `c` from the current point are included in the list.
@@ -35,19 +45,146 @@ def min_dist_point : list (point × ℚ) → option point
   pair, and only considering the neighbors of `p`.
 -/
 def mdp_with (p : point) (g : grid_2D) : option (point × point) :=
-    let N := get_neighbs p g in
-    let point_dist_pairs : list (point × ℚ) := N.map (λ q, (q, ∥ p - q ∥)) in
-    match min_dist_point point_dist_pairs with
-    | some q := some (p, q)
-    | none := none
-    end
+  let ps := get_neighbs p g in
+  min_dist_pair p ps
 
-
-lemma get_neighbs_contains_all_within_ball :
-  ∀ (c : ℕ⁺) (ps : list point) (p q : point) (g : grid_2D),
-    (∥ p - q ∥ ≤ c) → (q ∈ get_neighbs p g) := begin
+lemma pt_in_ball_neighbs_nonempty :
+  ∀ (p : point) (g : grid_2D),
+    (∃ (x : point), pt_in_ball p x g.c g.ps) →
+    (get_neighbs p g ≠ []) := begin
   sorry
 end
+
+lemma x_neq_p_and_in_res_in_res_filter :
+  ∀ (p x : point) (ps : list point),
+    (x ≠ p) →
+    (x ∈ ps) →
+    x ∈ (list.filter (λ y, y ≠ p) ps) := sorry
+
+lemma q_in_ball_means_grid_idx_in_get_idxs :
+  ∀ (p q : point) (c : ℕ⁺) (qs : list point),
+  pt_in_ball p q c qs →
+  (get_grid_idx q) ∈ (get_idxs p c) := sorry
+
+lemma x_in_some_l_x_in_join_ls :
+  ∀ (x : point) (ls : list (list point)),
+    (∃ (l : list point), x ∈ l ∧ l ∈ ls) →
+    x ∈ ls.join := sorry
+
+lemma x_in_grid_idxs_x_in_find_res :
+  ∀ (p x : point) (g : grid_2D),
+    (get_grid_idx x ∈ get_idxs p g.c) →
+    (∃ l, (in_opt_list x l) ∧ (l ∈ (get_idxs p g.c).map g.data.find)) := sorry
+
+lemma some_l_in_ls_l_in_lift :
+  ∀ {α} (l : list α) (ls : list (option (list α))),
+    some l ∈ ls →
+    l ∈ list.map lift_option_list ls := begin
+  sorry
+end
+
+lemma get_neighbs_gets_neighbs :
+  ∀ (p : point) (g : grid_2D),
+    ∀ (x : point),
+      (pt_in_ball p x g.c g.ps) →
+      (x ∈ get_neighbs p g) := begin
+  intros p g x x_in_ball,
+  simp only [get_neighbs],
+  have grid_idx_x_in_idxs : (get_grid_idx x) ∈ (get_idxs p g.c) := begin
+    apply q_in_ball_means_grid_idx_in_get_idxs,
+    assumption,
+  end,
+  apply x_neq_p_and_in_res_in_res_filter,
+  {
+    unfold pt_in_ball at x_in_ball,
+    exact x_in_ball.right.left,
+  },
+  apply x_in_some_l_x_in_join_ls,
+  have x_in_opt_list : (∃ l, (in_opt_list x l) ∧ (l ∈ (get_idxs p g.c).map g.data.find)) := begin
+    apply x_in_grid_idxs_x_in_find_res,
+    assumption,
+  end,
+  cases x_in_opt_list with l x_in_opt_list,
+  cases x_in_opt_list with x_in_opt_list l_in_res,
+  cases l,
+  { cases x_in_opt_list, },
+  fapply exists.intro,
+  exact l,
+  split,
+  unfold in_opt_list at x_in_opt_list,
+  assumption,
+  apply some_l_in_ls_l_in_lift,
+  assumption,
+end
+
+lemma min_dist_pair_closest :
+  ∀ (p : point) (ps : list point),
+    ∀ (x : point),
+      (x ∈ ps) →
+      (min_dist_pair p ps ≤ some (p, x)) :=
+begin
+  sorry
+end
+
+lemma min_dist_pair_includes_center :
+  ∀ (p : point) (ps : list point),
+    (∃ (z w : point), min_dist_pair p ps = some (z, w)) →
+    (∃ (q : point), min_dist_pair p ps = some (p, q)) := begin
+  sorry
+end
+
+lemma pt_in_ball_mdp_is_some :
+  ∀ (p : point) (g : grid_2D),
+    (∃ (x : point), pt_in_ball p x g.c g.ps) →
+    (∃ (x : point), mdp_with p g = some (p, x)) := begin
+  intros p g exists_x_in_ball,
+  simp [mdp_with],
+  have neighbs_nonempty : get_neighbs p g ≠ [] := begin
+    apply pt_in_ball_neighbs_nonempty,
+    assumption,
+  end,
+  cases exists_x_in_ball with x exists_x_in_ball,
+  have x_in_neighbs : x ∈ get_neighbs p g := begin
+    apply get_neighbs_gets_neighbs,
+    assumption,
+  end,
+  have mdp_le_px : min_dist_pair p (get_neighbs p g) ≤ some (p, x) := begin
+    apply min_dist_pair_closest,
+    assumption,
+  end,
+  have mdp_is_some : ∃ (z w : point), min_dist_pair p (get_neighbs p g) = some (z, w) := begin
+    apply option_pt_le_some_eq_some,
+    exact mdp_le_px,
+  end,
+  apply min_dist_pair_includes_center,
+  assumption,
+end
+
+lemma get_min_dist_pair_correct :
+  ∀ (p : point) (g : grid_2D),
+    ∀ (x : point),
+      (pt_in_ball p x g.c g.ps) →
+      ((mdp_with p g) ≤ some (p, x)) := begin
+  intros p g x x_in_ball,
+  simp [mdp_with],
+  apply min_dist_pair_closest,
+  apply get_neighbs_gets_neighbs,
+  assumption,
+end
+
+lemma min_dist_pair_in_ball :
+  ∀ (p q : point) (g : grid_2D),
+    (mdp_with p g = some (p, q)) →
+    pt_in_ball p q g.c g.ps := begin
+  sorry
+end
+
+-- lemma get_neighbs_contains_all_within_ball :
+--   ∀ (c : ℕ⁺) (ps : list point) (p q : point) (g : grid_2D),
+--     (∥ p - q ∥ ≤ c) →
+--     (q ∈ get_neighbs p g) := begin
+--   sorry
+-- end
 
 
 def aux (g : grid_2D) : list point → option (point × point)
@@ -57,28 +194,6 @@ def aux (g : grid_2D) : list point → option (point × point)
     let curr_res := mdp_with p g in
     -- TODO figure out why we can't get decidable to work on `point_le`.
     if point_lt' curr_res rec_res then curr_res else rec_res
-
-
-def pt_in_ball (p q : point) (c : ℕ⁺) (qs : list point) : Prop :=
-  q ∈ qs ∧
-  q ≠ p ∧
-  ∥q - p∥ ≤ c
-
-
-lemma get_min_dist_pair_correct :
-  ∀ (p : point) (g : grid_2D),
-    ∀ (x : point),
-      (pt_in_ball p x g.c g.ps) →
-      ((mdp_with p g) ≤ some (p, x)) := begin
-  sorry
-end
-
-lemma min_dist_pair_in_ball :
-  ∀ (p q : point) (g : grid_2D),
-    mdp_with p g = some (p, q) →
-    pt_in_ball p q g.c g.ps := begin
-  sorry
-end
 
 
 /-

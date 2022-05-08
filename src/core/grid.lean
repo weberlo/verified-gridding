@@ -54,40 +54,103 @@ def grid_points (c : ℕ⁺) : list point → grid_2D
 
 #check (grid_points ⟨3, by simp⟩ [(0, 0), (2, 2)]).data.entries
 
-def get_neighbs (p : point) (g : grid_2D) : list point :=
+def get_kernel (bound : ℕ) : list (ℤ × ℤ) :=
+  (do
+    j <- list.range (2 * bound + 1),
+    return (do
+      i <- list.range (2 * bound + 1),
+      return (-(bound : ℤ) + i, -(bound : ℤ) + j))).join
+
+def get_idxs (p : point) (c : ℕ⁺) :=
   let grid_idx := get_grid_idx p in
+  let bound := nat.sqrt c in
+  let kernel := get_kernel bound in
+  kernel.map (λ offs, grid_idx + offs)
+
+def lift_option_list {α} : option (list α) → list α
+| none := []
+| (some l) := l
+
+def in_opt_list {α : Type} (x : α) : option (list α) → Prop
+| none := false
+| (some xs') := x ∈ xs'
+
+lemma lift_option_list_does_nothing :
+  ∀ (x : point) (ls : option (list point)),
+  (x ∈ lift_option_list ls) ↔
+  in_opt_list x ls := sorry
+
+def get_neighbs (p : point) (g : grid_2D) : list point :=
+  -- let grid_idx := get_grid_idx p in
   -- TODO do we need a `+ 1`?
   -- let bound := nat.sqrt g.c + 1 in
-  let bound := nat.sqrt g.c in
-  let kernel : list (ℤ × ℤ) :=
-    (do
-        j <- list.range (2 * bound + 1),
-        return (do
-          i <- list.range (2 * bound + 1),
-          return (-(bound : ℤ) + i, -(bound : ℤ) + j))).join in
+  -- let bound := nat.sqrt g.c in
   -- let kernel : list (ℤ × ℤ) :=
-  --   [
-  --     (-1, 1), (0, 1), (1, 1),
-  --     (-1, 0), (0, 0), (1, 0),
-  --     (-1, -1), (0, -1), (1, -1)
-  --   ]
-  -- in
-  (kernel.map (λ offs,
-    match (g.data.find (grid_idx + offs)) with
-    | none := []
-    | (some l) := l
-    end)).join.filter (λ q, q ≠ p)
+  --   (do
+  --       j <- list.range (2 * bound + 1),
+  --       return (do
+  --         i <- list.range (2 * bound + 1),
+  --         return (-(bound : ℤ) + i, -(bound : ℤ) + j))).join in
+  let idxs : list (ℤ × ℤ) := get_idxs p g.c in
+  let cells : list (option (list point)) := idxs.map (λ i, g.data.find i) in
+  let cells' : list (list point) := cells.map lift_option_list in
+  let flat_cells : list point := cells'.join in
+  flat_cells.filter (λ q, q ≠ p)
+  -- (kernel.map (λ offs,
+  --   match (g.data.find (grid_idx + offs)) with
+  --   | none := []
+  --   | (some l) := l
+  --   end)).join.filter (λ q, q ≠ p)
+
+lemma cell_ij_to_kl_dist_bd :
+  ∀ (p q : point) (i j k l : ℤ),
+    get_grid_idx p = (i, j) →
+    get_grid_idx q = (k, l) →
+    ∥p - q∥ ≤ ∥(i, j) - (k, l)∥ := sorry
+
+-- lemma holds_for_sublists_holds_for_join :
+--   pxs
 
 
-lemma get_neighbs_gets_neighbs :
-  ∀ (p : point) (g : grid_2D),
-    ∀ (q : point),
-      (q ∈ g.ps ∧ ∥ p - q ∥ ≤ g.c) → (q ∈ get_neighbs p g) :=
-begin
-  sorry
+lemma kernel_val_bds :
+  ∀ (bound : ℕ) (i j : ℤ),
+    ((i, j) ∈ get_kernel bound) →
+    ((-(↑bound) ≤ i) ∧ (i ≤ ↑bound)) ∧
+    ((-(↑bound) ≤ j) ∧ (j ≤ ↑bound)) := begin
+  intros bound i j ij_in_kernel,
+  repeat {constructor; split},
+  {
+    sorry,
+  },
+  {
+    simp [get_kernel] at ij_in_kernel,
+    cases ij_in_kernel with l ij_in_kernel,
+    cases ij_in_kernel with list_def ij_in_l,
+    cases list_def with a list_def,
+    cases list_def with a_bd list_def,
+    induction bound,
+    {
+      simp [list.range, list.bind, list.range_core, list.map] at *,
+      rw [list_def] at ij_in_l,
+      cases ij_in_l,
+      cases ij_in_l,
+      refl,
+      cases ij_in_l,
+    },
+    {
+      sorry,
+    },
+  },
+  sorry,
+  sorry,
 end
 
+lemma list_range_elts_in_range :
+  ∀ (x n : ℕ),
+    (x ∈ list.range n) →
+    0 ≤ x ∧ x < n := sorry
 
+lemma idx_bounds :
 
 /-
   Theorems and Lemmas
