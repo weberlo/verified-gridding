@@ -631,146 +631,81 @@ lemma aux_finds_closest_pair_in_ball_union:
   },
 end
 
+lemma cp_in_ball_union_in_ps :
+  ∀ (c : ℕ⁺) (z w : point) (ps qs : list point),
+    closest_pair_in_ball_union c qs (some (z, w)) ps →
+    z ∈ ps := sorry
+
 lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
-  ∀ (c : ℕ⁺) (r s : point) (xy : option (point × point)) (ps qs : list point),
+  ∀ (c : ℕ⁺) (r s : point) (zw : option (point × point)) (ps qs : list point),
     ps ⊆ qs →
-    r ∈ qs →
-    s ∈ qs →
-    ((r ∈ ps ∧ pt_in_ball r s c qs) ∨ (s ∈ ps ∧ pt_in_ball s r c qs)) →
-    closest_pair_in_ball_union c qs xy ps →
-    xy ≤ some (r, s) := begin
+    r ∈ ps →
+    pt_in_ball r s c qs →
+    closest_pair_in_ball_union c qs zw ps →
+    zw ≤ some (r, s) := begin
   intros
-    c r s xy ps qs
-    ps_subset_qs r_in_qs s_in_qs rs_in_ball xy_cp_in_balls,
-  induction ps,
+    c r s zw ps qs
+    ps_subset_qs r_in_ps s_in_r_ball zw_cp_in_balls,
+  induction zw_cp_in_balls,
   {
-    cases rs_in_ball,
-    repeat {
-      cases rs_in_ball,
-      cases rs_in_ball_left,
-    },
+    cases r_in_ps,
   },
   {
-    rename [ps_hd → p, ps_tl → ps'],
-    cases xy_cp_in_balls,
+    rename [
+      zw_cp_in_balls_xy → zw,
+      zw_cp_in_balls_p → p,
+      zw_cp_in_balls_ps' → ps',
+      zw_cp_in_balls_ᾰ → zw_cp_in_union_ps'_balls,
+      zw_cp_in_balls_ᾰ_1 → zw_closest_in_p_ball,
+      zw_cp_in_balls_ih → ih
+    ],
+    cases r_in_ps,
     {
-      -- Case [no_update]
-      rename [
-        xy_cp_in_balls_ᾰ → xy_cp_in_balls',
-        xy_cp_in_balls_ᾰ_1 → xy_cp_in_ps_hd_ball
-      ],
-      cases rs_in_ball,
-      {
-        cases rs_in_ball with r_in_ps s_in_r_ball,
-        cases r_in_ps,
-        {
-          rw [r_in_ps] at *,
-          apply xy_cp_in_ps_hd_ball,
-          exact s_in_r_ball,
-        },
-        {
-          have : p ∈ qs ∧ ps' ⊆ qs := begin
-            apply list.cons_subset.mp,
-            assumption,
-          end,
-          apply ps_ih,
-          {
-            exact this.right,
-          },
-          {
-            apply or.inl,
-            split,
-            exact r_in_ps,
-            exact s_in_r_ball,
-          },
-          {
-            exact xy_cp_in_balls',
-          },
-        }
-      },
-      {
-        cases rs_in_ball with r_in_ps s_in_r_ball,
-        cases r_in_ps,
-        apply option_pt_le_symm,
-        {
-          rw [r_in_ps] at *,
-          apply xy_cp_in_ps_hd_ball,
-          exact s_in_r_ball,
-        },
-        {
-          have : p ∈ qs ∧ ps' ⊆ qs := begin
-            apply list.cons_subset.mp,
-            assumption,
-          end,
-          apply ps_ih,
-          {
-            exact this.right,
-          },
-          {
-            apply or.inr,
-            split,
-            exact r_in_ps,
-            exact s_in_r_ball,
-          },
-          {
-            exact xy_cp_in_balls',
-          },
-        }
-      }
+      rw [r_in_ps] at *,
+      apply zw_closest_in_p_ball,
+      assumption,
     },
     {
-      -- Case [update]
-      rename [
-        xy_cp_in_balls_q → q,
-        xy_cp_in_balls_xy → xy',
-        xy_cp_in_balls_ᾰ → q_closest_in_ball_and_le_xy',
-        xy_cp_in_balls_ᾰ_1 → xy_cp_in_balls'
-      ],
-      cases q_closest_in_ball_and_le_xy' with q_in_ball q_closest_and_le_xy',
-      cases q_closest_and_le_xy' with q_closest_in_ball q_le_xy',
-      cases rs_in_ball,
-      {
-        cases rs_in_ball with r_in_ps s_in_r_ball,
-        cases r_in_ps,
-        {
-          rw [r_in_ps] at *,
-          simp [has_le.le, point_le] at *,
-          rw [point_norm_sub_comm p q, point_norm_sub_comm p s],
-          apply q_closest_in_ball,
-          exact s_in_r_ball,
-        },
-        {
-          -- have p_in_qs_and_ps'_subset_qs : p ∈ qs ∧ ps' ⊆ qs := begin
-          --   apply list.cons_subset.mp,
-          --   assumption,
-          -- end,
-          cases xy_cp_in_balls,
-          {
-            sorry,
-          },
-          {
-
-          }
-          -- apply ps_ih,
-          -- {
-          --   exact this.right,
-          -- },
-          -- {
-          --   apply or.inl,
-          --   split,
-          --   exact r_in_ps,
-          --   exact s_in_r_ball,
-          -- },
-          -- {
-
-
-          -- },
-        }
-      },
-      {
-      }
-    },
+      have ps_decomp : p ∈ qs ∧ ps' ⊆ qs := begin
+        apply list.cons_subset.mp,
+        assumption,
+      end,
+      apply ih,
+      exact ps_decomp.right,
+      exact r_in_ps,
+    }
   },
+  {
+    rename [
+      zw_cp_in_balls_xy → zw',
+      zw_cp_in_balls_p → p,
+      zw_cp_in_balls_ps' → ps',
+      zw_cp_in_balls_q → q,
+      zw_cp_in_balls_ᾰ → q_closest_in_p_ball_and_pq_le_zw',
+      zw_cp_in_balls_ᾰ_1 → zw_cp_in_union_ps'_balls,
+      zw_cp_in_balls_ih → ih
+    ],
+    cases r_in_ps,
+    {
+      rw [r_in_ps] at *,
+      simp [has_le.le, point_le],
+      rw [point_norm_sub_comm p q, point_norm_sub_comm p s],
+      apply q_closest_in_p_ball_and_pq_le_zw'.right.left,
+      assumption,
+    },
+    {
+      apply option_pt_lt_to_le,
+      apply option_pt_lt_le_trans,
+      exact q_closest_in_p_ball_and_pq_le_zw'.right.right,
+      have ps_decomp : p ∈ qs ∧ ps' ⊆ qs := begin
+        apply list.cons_subset.mp,
+        assumption,
+      end,
+      apply ih,
+      exact ps_decomp.right,
+      exact r_in_ps,
+    }
+  }
 end
 
 lemma in_sublist_in_list :
@@ -807,14 +742,14 @@ lemma cp_with_help_and_cp_in_balls_implies_closest_pair :
     exact ps,
     refl,
     exact h_cp_help.left.left,
-    exact h_cp_help.left.right.left,
-    apply or.inr,
     unfold pt_in_ball,
-    repeat { split },
-    exact h_cp_help.left.left,
+    repeat {split},
+    exact h_cp_help.left.right.left,
+    apply ne.symm,
     exact h_cp_help.left.right.right.left,
+    rw [point_norm_sub_comm],
     exact h_cp_help.right.right,
-    exact h_cp_in_ball_union,
+    assumption,
   end,
   have xy_is_some : ∃ (x y : point), xy = some (x, y) := begin
     apply option_pt_le_some_eq_some,
