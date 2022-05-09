@@ -308,6 +308,8 @@ When you have lemmas that are expressed with respect to integers, but you have v
 
 If you have an inequality over the naturals, but you need to use it in concert with some other inequalities over integers, you need to have a lemma which says if $a \leq_{\N} b$ holds when $a,b \in \N$, then if you take the inclusion into $\Z$, $a \leq_{\Z} b$.
 
+And you need to have ``coercions preserve $(\leq \mid < \mid > \mid \geq)$'' for all of the different relations, so you can transport results across coercions.
+
 These kinds of issues became a huge pain when I had to prove that \texttt{get\_neighbs} fetches all points within distance $c$ from the center point $p$.
 
 This blocks a lot of proof automation, because you may have coercions sprinkled throughout your context
