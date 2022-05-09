@@ -81,26 +81,11 @@ lemma lift_option_list_does_nothing :
   in_opt_list x ls := sorry
 
 def get_neighbs (p : point) (g : grid_2D) : list point :=
-  -- let grid_idx := get_grid_idx p in
-  -- TODO do we need a `+ 1`?
-  -- let bound := nat.sqrt g.c + 1 in
-  -- let bound := nat.sqrt g.c in
-  -- let kernel : list (ℤ × ℤ) :=
-  --   (do
-  --       j <- list.range (2 * bound + 1),
-  --       return (do
-  --         i <- list.range (2 * bound + 1),
-  --         return (-(bound : ℤ) + i, -(bound : ℤ) + j))).join in
   let idxs : list (ℤ × ℤ) := get_idxs p g.c in
   let cells : list (option (list point)) := idxs.map (λ i, g.data.find i) in
   let cells' : list (list point) := cells.map lift_option_list in
   let flat_cells : list point := cells'.join in
   flat_cells.filter (λ q, q ≠ p)
-  -- (kernel.map (λ offs,
-  --   match (g.data.find (grid_idx + offs)) with
-  --   | none := []
-  --   | (some l) := l
-  --   end)).join.filter (λ q, q ≠ p)
 
 lemma cell_ij_to_kl_dist_bd :
   ∀ (p q : point) (i j k l : ℤ),

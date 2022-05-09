@@ -291,6 +291,29 @@ We would face the same difficulties if we chose to use the rationals, because th
 Working at such a low level of abstraction and proving statements in the nitty gritty details makes it quite easy to forget why you're proving something.
 There have been multiple times where I've gotten in the zone proving something, then realized after a long struggle that the lemma actually isn't quite correct.
 
+\subsection{Strings of Equational Reasoning}
+There is apparently a \texttt{calc} environment which facilitates this kind of equational reasoning, but in my experience, it is finnicky and is unable to infer justifications well.
+
+For example, if you have an expression $2 \cdot (x^2)$, and you want to rewrite $x^2$ to $x + x$, using a lemma that says $x^2 = x + x$ is not sufficient.
+You need to apply congruence to this lemma, since it doesn't apply to the \textit{entire} term $2 \cdot (x^2)$.
+
+\subsection{Without Loss of Generality}
+In proofs that are highly symmetric, except for a few steps, it is unclear how to do anything better than copy the proof for one case into the other and make the necessary tweaks.
+
+To the best of my knowledge, there is no ``without loss of generality'' tactic in Lean.
+Wait a second... \href{https://leanprover-community.github.io/mathlib_docs/tactic/wlog.html}{this fucking does exist}.
+
+\subsection{Coercion Hell}
+When you have lemmas that are expressed with respect to integers, but you have variables that are natural numbers, and you want to apply these lemmas, then Lean inserts coercions from $\N$ to $\Z$.
+
+If you have an inequality over the naturals, but you need to use it in concert with some other inequalities over integers, you need to have a lemma which says if $a \leq_{\N} b$ holds when $a,b \in \N$, then if you take the inclusion into $\Z$, $a \leq_{\Z} b$.
+
+These kinds of issues became a huge pain when I had to prove that \texttt{get\_neighbs} fetches all points within distance $c$ from the center point $p$.
+
+This blocks a lot of proof automation, because you may have coercions sprinkled throughout your context
+
+I also defined a separate type $\N^+$ for positive numbers, and I defined an associated coercion to $\N$.
+
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
 
@@ -311,7 +334,7 @@ Induction is one way of linearizing our reasoning, so it almost corresponds to t
 
 In many ways, formal verification is not unlike the process of writing proofs in mathematics broadly.
 There is a vague intuition why something is true, and all that's missing is the right language to express it.
-The process is less satisfying though, because the theorems don't speak the same truths of the world that they do in math.
+The process is less satisfying though, because the theorems don't speak the same truths of the world that they do in math, and it makes one question whether the process was worth it.
 
 \paragraph{Alternative Ending.}
 Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.

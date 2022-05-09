@@ -48,23 +48,190 @@ def mdp_with (p : point) (g : grid_2D) : option (point × point) :=
   let ps := get_neighbs p g in
   min_dist_pair p ps
 
-lemma pt_in_ball_neighbs_nonempty :
-  ∀ (p : point) (g : grid_2D),
-    (∃ (x : point), pt_in_ball p x g.c g.ps) →
-    (get_neighbs p g ≠ []) := begin
-  sorry
+lemma range_in_kernel :
+  ∀ (i j : ℤ) (n : ℕ),
+    ((-(↑n) ≤ i) ∧ (i ≤ n) ∧
+     (-(↑n) ≤ j) ∧ (j ≤ n))
+    ↔
+    (i, j) ∈ (get_kernel n) := sorry
+
+lemma norm_bd_on_coords :
+  ∀ (a b : ℤ) (c : ℕ),
+    ∥(a, b)∥ ≤ c →
+    a*a ≤ c ∧ b*b ≤ c := sorry
+  -- (Something bounding `a` and `b` below and above by (+|-)nat.sqrt(c) (not sure whether inclusive or exclusive))
+
+lemma nat_sqrt_plus_one_sq_gt_nat :
+  ∀ (c : ℕ),
+    ((nat.sqrt c) + 1)*((nat.sqrt c) + 1) > c := sorry
+
+lemma sq_nonneg_lt :
+  ∀ (a b : ℤ),
+    a ≤ 0 →
+    b ≤ 0 →
+    a < b →
+    b*b < a*a := sorry
+
+lemma nat_ge_zero :
+  ∀ (n : ℕ), n ≥ 0 := sorry
+
+lemma ge_neg_le :
+  ∀ (n : ℤ),
+    n ≥ 0 →
+    -n ≤ 0 := sorry
+
+lemma coe_nat_int_ge :
+  ∀ (n : ℕ),
+  n ≥ 0 →
+  (↑n : ℤ) ≥ 0 := sorry
+
+lemma lt_to_le :
+  ∀ (a b : ℤ),
+    a < b → a ≤ b := sorry
+
+lemma neg_sq_sq :
+  ∀ (a : ℤ),
+    (-a)*(-a) = a*a := sorry
+
+lemma succ_sqrt_sq_gt_orig :
+  ∀ (c : ℕ),
+    ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := sorry
+
+lemma coe_preserves_lt :
+  ∀ (a b : ℕ),
+    a < b →
+    (↑a : ℤ) < ↑b := sorry
+
+lemma bounded_norm_in_kernel:
+  ∀ (ab : ℤ × ℤ) (c : ℕ),
+    ∥ab∥ ≤ c →
+    (ab ∈ get_kernel ((nat.sqrt c) + 1)) := begin
+  intros ab c ab_le_c,
+  cases ab with a b,
+  -- have :
+  --   ((-(↑(nat.sqrt c)) ≤ a) ∧ (a ≤ (nat.sqrt c)) ∧
+  --    (-(↑(nat.sqrt c)) ≤ b) ∧ (b ≤ (nat.sqrt c))) := begin
+  --   exact range_in_kernel.mpr
+  -- end,
+  apply (range_in_kernel a b ((nat.sqrt c) + 1)).mp,
+  split,
+  {
+    by_cases h : -↑((nat.sqrt c) + 1) ≤ a,
+    assumption,
+    simp at h,
+    have a_sq_le_c_and_b_sq_le_c: a*a ≤ c ∧ b*b ≤ c := begin
+      apply norm_bd_on_coords,
+      assumption,
+    end,
+    have h : a < -(↑(nat.sqrt c) + 1) := begin
+      simp,
+      rw [add_comm],
+      exact h,
+    end,
+    have sq_succ_sqrt_lt_sq_a : -(↑(nat.sqrt c) + 1) * -(↑(nat.sqrt c) + 1) < a * a := begin
+      apply sq_nonneg_lt,
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        have neg_succ_sqrt_le_zero : -(↑(↑(nat.sqrt c) + 1) : ℤ) ≤ 0 := begin
+          apply ge_neg_le,
+          apply coe_nat_int_ge,
+          assumption,
+        end,
+        have h_le : a ≤ -(↑(nat.sqrt c) + 1) := begin
+          apply lt_to_le,
+          assumption,
+        end,
+        apply le_trans,
+        exact h_le,
+        simp at *,
+        exact neg_succ_sqrt_le_zero,
+      },
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        have neg_succ_sqrt_le_zero : -(↑(↑(nat.sqrt c) + 1) : ℤ) ≤ 0 := begin
+          apply ge_neg_le,
+          apply coe_nat_int_ge,
+          assumption,
+        end,
+        simp at *,
+        exact neg_succ_sqrt_le_zero,
+      },
+      {
+        exact h,
+      },
+    end,
+    rw [neg_sq_sq] at sq_succ_sqrt_lt_sq_a,
+    have succ_sqrt_c_sq_gt_c : ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := begin
+      apply succ_sqrt_sq_gt_orig,
+    end,
+    cases a_sq_le_c_and_b_sq_le_c with a_sq_le_c b_sq_le_c,
+    have c_lt_a_sq : (↑c : ℤ) < a*a := begin
+      fapply lt_trans,
+      exact ↑((nat.sqrt c + 1) * (nat.sqrt c + 1)),
+      simp at succ_sqrt_c_sq_gt_c,
+      apply coe_preserves_lt,
+      assumption,
+      simp,
+      assumption,
+    end,
+    exfalso,
+    apply not_le_and_gt,
+    split,
+    exact a_sq_le_c,
+    sorry
+  },
+  split,
+  {
+    sorry
+  },
+  split,
+  {
+    sorry
+  },
+  {
+    sorry
+  }
 end
 
-lemma x_neq_p_and_in_res_in_res_filter :
-  ∀ (p x : point) (ps : list point),
-    (x ≠ p) →
-    (x ∈ ps) →
-    x ∈ (list.filter (λ y, y ≠ p) ps) := sorry
+lemma in_ball_exists_idx :
+  ∀ (p q : point) (c : ℕ⁺) (qs : list point),
+    pt_in_ball p q c qs →
+    (∃ (a b : ℤ),
+      (∥(a, b)∥ ≤ c) ∧ (p + (a, b) = q)) := sorry
 
 lemma q_in_ball_means_grid_idx_in_get_idxs :
   ∀ (p q : point) (c : ℕ⁺) (qs : list point),
   pt_in_ball p q c qs →
-  (get_grid_idx q) ∈ (get_idxs p c) := sorry
+  (get_grid_idx q) ∈ (get_idxs p c) := begin
+  intros p q c qs q_in_p_ball,
+  have exists_idx : (∃ (a b : ℤ), (∥(a, b)∥ ≤ c) ∧ (p + (a, b) = q)) := begin
+    apply in_ball_exists_idx,
+    assumption,
+  end,
+  cases exists_idx with a exists_idx,
+  cases exists_idx with b exists_idx,
+  unfold pt_in_ball at q_in_p_ball,
+  cases q_in_p_ball with q_in_qs q_ne_p_and_bded_norm,
+  cases q_ne_p_and_bded_norm with q_ne_p q_bded_norm,
+  simp [point_norm] at q_bded_norm,
+  simp [get_idxs, get_grid_idx],
+  fapply exists.intro,
+  exact a,
+  fapply exists.intro,
+  exact b,
+  split,
+  {
+    apply bounded_norm_in_kernel,
+    exact exists_idx.left,
+  },
+  {
+    exact exists_idx.right,
+  }
+end
 
 lemma x_in_some_l_x_in_join_ls :
   ∀ (x : point) (ls : list (list point)),
@@ -94,27 +261,30 @@ lemma get_neighbs_gets_neighbs :
     apply q_in_ball_means_grid_idx_in_get_idxs,
     assumption,
   end,
-  apply x_neq_p_and_in_res_in_res_filter,
+  apply (list.mem_filter.mpr),
+  split,
+  {
+    apply x_in_some_l_x_in_join_ls,
+    have x_in_opt_list : (∃ l, (in_opt_list x l) ∧ (l ∈ (get_idxs p g.c).map g.data.find)) := begin
+      apply x_in_grid_idxs_x_in_find_res,
+      assumption,
+    end,
+    cases x_in_opt_list with l x_in_opt_list,
+    cases x_in_opt_list with x_in_opt_list l_in_res,
+    cases l,
+    { cases x_in_opt_list, },
+    fapply exists.intro,
+    exact l,
+    split,
+    unfold in_opt_list at x_in_opt_list,
+    assumption,
+    apply some_l_in_ls_l_in_lift,
+    assumption,
+  },
   {
     unfold pt_in_ball at x_in_ball,
     exact x_in_ball.right.left,
   },
-  apply x_in_some_l_x_in_join_ls,
-  have x_in_opt_list : (∃ l, (in_opt_list x l) ∧ (l ∈ (get_idxs p g.c).map g.data.find)) := begin
-    apply x_in_grid_idxs_x_in_find_res,
-    assumption,
-  end,
-  cases x_in_opt_list with l x_in_opt_list,
-  cases x_in_opt_list with x_in_opt_list l_in_res,
-  cases l,
-  { cases x_in_opt_list, },
-  fapply exists.intro,
-  exact l,
-  split,
-  unfold in_opt_list at x_in_opt_list,
-  assumption,
-  apply some_l_in_ls_l_in_lift,
-  assumption,
 end
 
 lemma min_dist_pair_closest :
@@ -139,10 +309,6 @@ lemma pt_in_ball_mdp_is_some :
     (∃ (x : point), mdp_with p g = some (p, x)) := begin
   intros p g exists_x_in_ball,
   simp [mdp_with],
-  have neighbs_nonempty : get_neighbs p g ≠ [] := begin
-    apply pt_in_ball_neighbs_nonempty,
-    assumption,
-  end,
   cases exists_x_in_ball with x exists_x_in_ball,
   have x_in_neighbs : x ∈ get_neighbs p g := begin
     apply get_neighbs_gets_neighbs,

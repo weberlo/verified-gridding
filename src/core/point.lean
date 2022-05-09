@@ -268,6 +268,12 @@ lemma not_x_lt_y_and_gt_y :
   sorry
 end
 
+lemma not_le_and_gt :
+  ∀ (x y : ℤ),
+    ¬(x ≤ y ∧ y < x) := begin
+  sorry
+end
+
 lemma not_lt_and_not_gt_implies_eq :
   ∀ (x y : ℤ),
     ¬(x < y) →
