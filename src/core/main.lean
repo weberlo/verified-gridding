@@ -124,11 +124,6 @@ lemma bounded_norm_in_kernel:
     (ab ∈ get_kernel ((nat.sqrt c) + 1)) := begin
   intros ab c ab_le_c,
   cases ab with a b,
-  -- have :
-  --   ((-(↑(nat.sqrt c)) ≤ a) ∧ (a ≤ (nat.sqrt c)) ∧
-  --    (-(↑(nat.sqrt c)) ≤ b) ∧ (b ≤ (nat.sqrt c))) := begin
-  --   exact range_in_kernel.mpr
-  -- end,
   apply (range_in_kernel a b ((nat.sqrt c) + 1)).mp,
   split,
   {
@@ -257,10 +252,127 @@ lemma bounded_norm_in_kernel:
   },
   split,
   {
-    sorry
+    by_cases h : -↑((nat.sqrt c) + 1) ≤ b,
+    assumption,
+    simp at h,
+    have a_sq_le_c_and_b_sq_le_c: a*a ≤ c ∧ b*b ≤ c := begin
+      apply norm_bd_on_coords,
+      assumption,
+    end,
+    have h : b < -(↑(nat.sqrt c) + 1) := begin
+      simp,
+      rw [add_comm],
+      exact h,
+    end,
+    have sq_succ_sqrt_lt_sq_a : -(↑(nat.sqrt c) + 1) * -(↑(nat.sqrt c) + 1) < b * b := begin
+      apply sq_neg_lt,
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        have neg_succ_sqrt_le_zero : -(↑(↑(nat.sqrt c) + 1) : ℤ) ≤ 0 := begin
+          apply ge_neg_le,
+          apply coe_nat_int_ge,
+          assumption,
+        end,
+        have h_le : b ≤ -(↑(nat.sqrt c) + 1) := begin
+          apply lt_to_le,
+          assumption,
+        end,
+        apply le_trans,
+        exact h_le,
+        simp at *,
+        exact neg_succ_sqrt_le_zero,
+      },
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        have neg_succ_sqrt_le_zero : -(↑(↑(nat.sqrt c) + 1) : ℤ) ≤ 0 := begin
+          apply ge_neg_le,
+          apply coe_nat_int_ge,
+          assumption,
+        end,
+        simp at *,
+        exact neg_succ_sqrt_le_zero,
+      },
+      {
+        exact h,
+      },
+    end,
+    rw [neg_sq_sq] at sq_succ_sqrt_lt_sq_a,
+    have succ_sqrt_c_sq_gt_c : ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := begin
+      apply succ_sqrt_sq_gt_orig,
+    end,
+    cases a_sq_le_c_and_b_sq_le_c with a_sq_le_c b_sq_le_c,
+    have c_lt_a_sq : (↑c : ℤ) < b*b := begin
+      fapply lt_trans,
+      exact ↑((nat.sqrt c + 1) * (nat.sqrt c + 1)),
+      simp at succ_sqrt_c_sq_gt_c,
+      apply coe_preserves_lt,
+      assumption,
+      simp,
+      assumption,
+    end,
+    exfalso,
+    apply not_le_and_gt,
+    split,
+    exact b_sq_le_c,
+    exact c_lt_a_sq,
   },
   {
-    sorry
+    by_cases h : b ≤ ↑(nat.sqrt c + 1),
+    { assumption, },
+    simp at h,
+    have a_sq_le_c_and_b_sq_le_c: a*a ≤ c ∧ b*b ≤ c := begin
+      apply norm_bd_on_coords,
+      assumption,
+    end,
+    have sq_succ_sqrt_lt_sq_a : (↑(nat.sqrt c) + 1) * (↑(nat.sqrt c) + 1) < b*b := begin
+      apply sq_nonneg_lt,
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        apply coe_preserves_ge,
+        rw [coe_nat_nat_nop] at succ_sqrt_ge_zero,
+        exact succ_sqrt_ge_zero,
+      },
+      {
+        have succ_sqrt_ge_zero : ↑(nat.sqrt c) + 1 ≥ 0 := begin
+          apply nat_ge_zero,
+        end,
+        fapply le_trans,
+        exact (↑(nat.sqrt c) + 1),
+        simp only [ge] at succ_sqrt_ge_zero,
+        apply coe_preserves_ge,
+        rw [coe_nat_nat_nop] at succ_sqrt_ge_zero,
+        exact succ_sqrt_ge_zero,
+        apply lt_to_le,
+        exact h,
+      },
+      {
+        exact h,
+      },
+    end,
+    have succ_sqrt_c_sq_gt_c : ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := begin
+      apply succ_sqrt_sq_gt_orig,
+    end,
+    cases a_sq_le_c_and_b_sq_le_c with a_sq_le_c b_sq_le_c,
+    have c_lt_a_sq : (↑c : ℤ) < b*b := begin
+      fapply lt_trans,
+      exact ↑((nat.sqrt c + 1) * (nat.sqrt c + 1)),
+      simp at succ_sqrt_c_sq_gt_c,
+      apply coe_preserves_lt,
+      assumption,
+      simp,
+      assumption,
+    end,
+    exfalso,
+    apply not_le_and_gt,
+    split,
+    exact b_sq_le_c,
+    exact c_lt_a_sq,
   }
 end
 
