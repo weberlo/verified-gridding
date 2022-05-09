@@ -63,7 +63,7 @@ def get_kernel (bound : ℕ) : list (ℤ × ℤ) :=
 
 def get_idxs (p : point) (c : ℕ⁺) :=
   let grid_idx := get_grid_idx p in
-  let bound := nat.sqrt c in
+  let bound := nat.sqrt c + 1 in
   let kernel := get_kernel bound in
   kernel.map (λ offs, grid_idx + offs)
 
