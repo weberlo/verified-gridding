@@ -70,8 +70,9 @@ Link to Github repo.
 \section{Introduction}
 In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
 For a long time, proof assistants were thought of as unsatisfactory for formalizing undergraduate-level mathematics, let alone \textit{research}-level mathematics.
-This image began to change when a challenge by accomplished mathematician, Peter Scholze, was proposed: \href{https://xenaproject.wordpress.com/2020/12/05/liquid-tensor-experiment/}{The Liquid Tensor Experiment}.
-Within 6 months, the Lean community had completed the most import aspects of the proof, exceeding Scholze's expectations.
+This image began to change when a challenge by Fields Medalist, Peter Scholze, was proposed: \href{https://xenaproject.wordpress.com/2020/12/05/liquid-tensor-experiment/}{The Liquid Tensor Experiment}.
+This challenge involved formalizing a foundational result in a new area of mathematics.
+The Lean community took up the challenge, and within 6 months, had formalized the most import aspects of the proof, far exceeding Scholze's expectations.
 
 % No single innovation
 The rise of Lean cannot be explained by any significant \textit{technological} innovation---it was a \textit{cultural} innovation.
@@ -79,9 +80,7 @@ The rise of Lean cannot be explained by any significant \textit{technological} i
 The most relevant comparison is to the Coq proof assistant, which has emphasized sound, type-theoretic principles since its conception.
 Lean instead focuses on directly accomodating the workflows of mathematicians, embracing language features that elude type-theoretic grounding (e.g., quotients) and that destroy computational properties (e.g., the law of excluded middle).
 
-Resulting from its goals,
-Lean has attracted a number of mathematicians, who have formalized a substantial body of undergraduate-level mathematics in a library known as \href{https://leanprover-community.github.io}{Mathlib}.
-
+Because of Lean's focus on ergonomics, it has attracted a number of mathematicians, who have formalized a substantial body of undergraduate-level mathematics in a library known as \href{https://leanprover-community.github.io}{Mathlib}.
 
 % As a result, Lean encourages the use of classical logic.
 % A notable point of contrast that arises from this stated goal is that classical logic (i.e., using the law of excluded middle)
@@ -118,7 +117,9 @@ Our final achievements were
 \todo{Do some fenceposting}
 
 \section{Background}
-In this section, weeeeee
+In this section, we recap the closest pair with help problem and the algorithm presented in class that solves it (\shortref{sec:cp_with_help}).
+Then, we cover simplifications and restrictions we imposed on the specification, to make it amenable to formal verification (\shortref{sec:cp_with_help_simple}).
+Finally, we collect all notation used in this report and motivate the nonstandard notation (\shortref{sec:notation}).
 \todo{Fencepost}
 
 \subsection{Closest Pair With Help}\label{sec:cp_with_help}
@@ -146,7 +147,7 @@ The algorithm we saw in Lecture 11 to solve this problem is as follows.
   \end{algorithmic}
 \end{algorithm}
 
-\subsection{Simplified Closest Pair With Help}
+\subsection{Simplified Closest Pair With Help}\label{sec:cp_with_help_simple}
 For the sake of both simplicity and computability, we impose the following restrictions on the specification in Section~\ref{sec:cp_with_help}:
 \begin{itemize}
   \item \textbf{The points have integral components.} Lean does not include facilities for computing with real numbers, though, in principle, it could---with all results computed up to \textit{finite} precision.
@@ -225,7 +226,7 @@ With this simplified specification and the observations above, we have the follo
 % \end{minted}
 % \newpage
 
-\subsection{Notation}
+\subsection{Notation}\label{sec:notation}
 Here, we explain any notation in Table~\ref{fig:notation_summary} that was not explained in the previous subsections and that will be useful in later sections.
 \todo{Double back after the fact and check which symbols we actually need for points}
 \begin{figure}[H]
