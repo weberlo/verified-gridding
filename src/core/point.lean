@@ -1,9 +1,14 @@
+import algebra.group_power.order
+import analysis.normed.group.basic
+import data.hash_map
+import data.int.basic
+import data.int.order
 import data.nat.basic
 import data.rat.basic
 import data.rat.order
-import data.int.basic
-import data.int.order
-import algebra.group_power.order
+import data.rat.sqrt
+import data.real.basic
+import data.real.sqrt
 
 def point := ℤ × ℤ
 -- def point := ℚ × ℚ
@@ -150,7 +155,10 @@ lemma option_pt_lt_trans :
   ∀ (pq xy zw : option (point × point)),
     pq < xy →
     xy < zw →
-    pq < zw := sorry
+    pq < zw := begin
+  intros pq xy zw h1 h2,
+  sorry,
+end
 
 lemma option_pt_le_trans :
   ∀ (pq xy zw : option (point × point)),
@@ -193,7 +201,10 @@ lemma int_le_trans :
   ∀ (x y z : ℤ),
     x ≤ y →
     y ≤ z →
-    x ≤ z
+    x ≤ z := begin
+  intros x y z h1 h2,
+  linarith,
+end
 
 lemma point_lt'_iff_point_lt :
   ∀ (xy zw : option (point × point)),
@@ -205,11 +216,13 @@ lemma option_pt_le_some_eq_some :
 
 lemma int_nonneg_add :
   ∀ (x y : ℤ), int.nonneg x → int.nonneg y → int.nonneg (x + y) := begin
-    sorry
+  intros x y h1 h2,
+  sorry
 end
 
 lemma int_x_times_x_nonneg :
   ∀ (x : ℤ), int.nonneg (x * x) := begin
+    intros x,
     sorry
 end
 

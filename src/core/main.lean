@@ -69,53 +69,87 @@ lemma sq_neg_lt :
     a ≤ 0 →
     b ≤ 0 →
     a < b →
-    b*b < a*a := sorry
+    b*b < a*a := begin
+  intros a b h1 h2 h3,
+  sorry
+end
 
 lemma sq_nonneg_lt :
   ∀ (a b : ℤ),
     a ≥ 0 →
     b ≥ 0 →
     a < b →
-    a*a < b*b := sorry
+    a*a < b*b := begin
+  intros a b h1 h2 h3,
+  exact mul_lt_mul'' h3 h3 h1 h1,
+end
 
 lemma nat_ge_zero :
-  ∀ (n : ℕ), n ≥ 0 := sorry
+  ∀ (n : ℕ), n ≥ 0 := begin
+  intros n,
+  linarith,
+end
 
 lemma ge_neg_le :
   ∀ (n : ℤ),
     n ≥ 0 →
-    -n ≤ 0 := sorry
+    -n ≤ 0 := begin
+  intros n h,
+  linarith,
+end
 
 lemma coe_nat_int_ge :
   ∀ (n : ℕ),
   n ≥ 0 →
-  (↑n : ℤ) ≥ 0 := sorry
+  (↑n : ℤ) ≥ 0 := begin
+  intros n h,
+  simp [h],
+end
 
 lemma lt_to_le :
   ∀ (a b : ℤ),
-    a < b → a ≤ b := sorry
+    a < b → a ≤ b := begin
+  intros a b h,
+  linarith,
+end
 
 lemma neg_sq_sq :
   ∀ (a : ℤ),
-    (-a)*(-a) = a*a := sorry
+    (-a)*(-a) = a*a := begin
+  intros a,
+  ring,
+end
 
 lemma succ_sqrt_sq_gt_orig :
   ∀ (c : ℕ),
-    ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := sorry
+    ((nat.sqrt c) + 1) * ((nat.sqrt c) + 1) > c := begin
+  intros c,
+  exact nat.lt_succ_sqrt c,
+end
 
 lemma coe_preserves_lt :
   ∀ (a b : ℕ),
     a < b →
-    (↑a : ℤ) < ↑b := sorry
+    (↑a : ℤ) < ↑b := begin
+  intros a b h,
+  simp [h],
+end
 
 lemma coe_preserves_ge :
   ∀ (a b : ℕ),
     a ≥ b →
-    (↑a : ℤ) ≥ ↑b := sorry
+    (↑a : ℤ) ≥ ↑b := begin
+  intros a b h,
+  simp [h],
+  linarith,
+end
 
 lemma coe_nat_nat_nop :
   ∀ (n : ℕ),
-    (↑n : ℕ) = n := sorry
+    (↑n : ℕ) = n := begin
+  intros n,
+  simp,
+end
 
 lemma bounded_norm_in_hypercube:
   ∀ (ab : ℤ × ℤ) (c : ℕ),

@@ -271,11 +271,14 @@ Here, we explain any notation in Table~\ref{fig:notation_summary} that was not e
   \hline
   $\widetilde{\text{CP}}_P(x\!y)$ & $x\!y$ is the closest pair in $\bigcup_{p \in P} \left(p, B_P(p, c)\right)$, \\ & or $\mathsf{none}$ if there are no pairs in this set \\
   \hline
-  $G(P, c) : (\mathsf{grid} : \Z^2 \rightharpoonup [\Z^2]) \times$ & grid constructed from set of points $P$ \\
-  $(P : [\Z^2]) \times$ & and distance hint $c$ \\
+  $\mathsf{Grid} \coloneqq (\mathsf{grid} : \Z^2 \rightharpoonup [\Z^2]) \times$ & the type/fields of our grid structure \\
+  $(P : [\Z^2]) \times$ & \\
   $(c : \N^+){\color{white}\times}$ & \\
   \hline
-  $g$ & arbitrary grid structure \\
+  $G(P, c) : \mathsf{Grid}$ & grid constructed from set of points $P$ \\
+  & and distance hint $c$ \\
+  \hline
+  $g : \mathsf{Grid}$ & arbitrary grid structure \\
   \hline
   $g[p]$ & points in cell at index $p$ \\
   \hline
@@ -353,43 +356,74 @@ When we don't have access to the parameters a grid was constructed with, we nota
 % end
 % \end{minted}
 
-\section{Implementation}
-We won't waste much breath on the implementation.
+% \section{Implementation}
+% We won't waste much breath on the implementation.
+
+\section{Verification}
+\todo{Give top-down proof strategy spiel}
 
 \subsection{Code Structure}
 \todo{Try to assign mathematical notation to each of these}
 \begin{center}
-\begin{tabular} {|| c | c | c ||}
+\begin{tabular} {|| r | l | p{5cm} ||}
   \hline
   Function Name & Signature & Description \\
   \hline
   \hline
-  \texttt{find\_closest\_pair} & & \\
+  \texttt{find\_closest\_pair} &
+  $(c : \N^+) \to (P : [\Z^2]) \to (P \times P)^?$ &
+  The entry point to our algorithm.
+  Constructs the grid, then calls \texttt{aux}.
+  If the result is further than distance $c$, returns $\mathsf{none}$. \\
   \hline
-  \texttt{aux} & & \\
+  \texttt{aux} &
+  $(g : \mathsf{Grid}) \to (P : [\Z^2]) \to (P \times P)^?$ &
+  The core subroutine of the algorithm.
+  Recurses over $P$, using \texttt{mdp\_with} at each point $p$ to find points in $B_{P}(p, c)$.
+  \\
   \hline
-  \texttt{grid\_points} & & \\
+  \texttt{grid\_points} &
+  $(P : [\Z^2]) \to (c : \N^+) \to \mathsf{Grid}$ &
+  Creates the grid structure, inserting points according to \texttt{get\_grid\_idx}. \\
   \hline
-  \texttt{min\_dist\_pair} & & \\
+  \texttt{min\_dist\_pair} &
+  $(p : \Z^2) \to (Q : [\Z^2]) \to (P \times P)^?$ &
+  Given $p$ and a list of points in a ball around it, returns the closest point to $p$.  \\
   \hline
-  \texttt{mdp\_with} & & \\
+  \texttt{mdp\_with} &
+  $(p : \Z^2) \to (g : \mathsf{Grid}) \to (P \times P)^?$ &
+  Collects points around $p$ via \texttt{get\_neighbs}, then uses \texttt{min\_dist\_pair} to find the closest among them.
+  \\
   \hline
-  \texttt{get\_grid\_idx} & & \\
+  \texttt{get\_grid\_idx} &
+  $(p : \Z^2) \to \Z^2$ &
+  \\
   \hline
-  \texttt{get\_kernel} & & \\
+  \texttt{get\_hypercube} &
+  $(n : \N) \to [\Z^2]$ &
+  \\
   \hline
-  \texttt{get\_idxs} & & \\
+  \texttt{get\_idxs} &
+  $(p : \Z^2) \to (c : \N^+) \to [\Z^2]$ &
+  \\
   \hline
-  \texttt{lift\_option\_list} & & \\
+  \texttt{lift\_option\_list} &
+  $\forall (\alpha : \mathsf{Type}).\, [\alpha]^? \to [\alpha]$
+  &
+  \\
   \hline
-  \texttt{get\_neighbs} & & \\
+  \texttt{get\_neighbs} &
+  $(p : \Z^2) \to (g : \mathsf{Grid}) \to [\Z^2]$ &
+  \\
   \hline
 \end{tabular}
 \end{center}
 
 
-\section{Verification}
-\todo{Give top-down proof strategy spiel}
+The goal of our verification is to prove the following theorem.
+\begin{tcbtheorem}{{\large\texttt{find\_closest\_pair}} Finds Closest Pair}{main_finds_cp}
+If the closest pair is within distance $(1, c]$, \texttt{find\_closest\_pair} finds $(x, y)$ such that $\text{CP}_P(x, y)$.
+\end{tcbtheorem}
 
 \todo{Somehow mark the goal lemma about find closest pair in the figure.  Can't bold it because we're already bolding the lemmas of interest.  Maybe a star?  Or big letters saying "GOAL"}
 \begin{figure}[H]
@@ -450,6 +484,10 @@ In this section, we cover proofs which were either conceptually interesting or h
 As mentioned in Section~\ref{sec:idk_where}, \texttt{aux} is a recursive function that performs the core iteration over the list of points $P$---\texttt{find\_closest\_pair} simply creates the grid and filters the result of \texttt{aux} if it's not within distance $c$.
 Thus, the most important property to prove is that \texttt{aux} finds the closest pair, given that the distance hint holds true.
 
+\begin{tcblemma}{{\large\texttt{aux}} Finds Closest Pair}{aux_finds_cp}
+If the closest pair is within distance $(1, c]$, \texttt{aux} finds $(x, y)$ such that $\text{CP}_P(x, y)$.
+\end{tcblemma}
+
 When you prove facts about a recursive function, you often prove them by induction.
 If we want to prove our algorithm finds the closest pair, a naive induction on $P$ would have us prove the following in the induction step:
 \begin{quote}
@@ -483,9 +521,20 @@ To capture this process in a predicate, we create a recursively defined predicat
   \label{case:curr_pt_closer}
   \item \textbf{Current point closer:} If $\widetilde{\text{CP}}_P(x\!y, P')$, but there is a point $q \in B_P(p, c)$ closer to $p$ than any other point in $B_P(p, c)$, and $(p, q)$ is closer than $x\!y$, then $\widetilde{\text{CP}}_P(\mathsf{some(p, q)}, p :: P')$.
 \end{itemize}
-Now, instead of proving \texttt{aux} finds $(x, y)$ such that $\text{CP}_P(x, y)$, we prove it finds $(x, y)$ such that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$, yielding the correct induction hypothesis and allowing the proof to go through.
+Now, instead of proving \texttt{aux} finds $(x, y)$ such that $\text{CP}_P(x, y)$, we prove the following.
 
-With this lemma proven, we prove another lemma that if $(x, y)$ satisfies $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$ and the closest pair lies in the range $(1, c]$, then $(x, y)$ is the closest pair, completing the result.
+\begin{tcblemma}{{\large\texttt{aux}} Finds Closest Pair in Ball Union}{aux_finds_cp_in_ball_union}
+\texttt{aux} finds $(x, y)$ such that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$.
+\end{tcblemma}
+This lemma provides the correct induction hypothesis, allowing the proof to go through.
+
+With Lemma~\ref{lem:aux_finds_cp_in_ball_union} proven, we still need to prove Lemma~\ref{lem:aux_finds_cp}.
+To do so, we prove the lemma below, which combines Lemma~\ref{lem:aux_finds_cp_in_ball_union} with the distance hint.
+For brevity, we omit discussion of the proof, though we discuss one of the lemmas it relies on in Section~\ref{sec:cp_in_ball_union_high_level}.
+
+\begin{tcblemma}{($\widetilde{\text{CP}}_P$ and Distance Hint) $\Rightarrow$ $\text{CP}_P$}{cp_in_ball_union_and_distance_hint}
+\texttt{aux} finds $(x, y)$ such that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$.
+\end{tcblemma}
 
 % \todo{Import graphic from presentation}
 % This one is interesting because it highlights the concept of strengthening (or rather, ``aligning'') the induction hypothesis.
@@ -502,17 +551,18 @@ With this lemma proven, we prove another lemma that if $(x, y)$ satisfies $\wide
 
 
 \subsubsection{Closest Pair In Ball Union Closer Than All Points Within Distance $\mathbf{c}$}
-In proving that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y), P)$ and the distance hint imply $\text{CP}_P(x, y)$, we require the following lemma.
+\label{sec:cp_in_ball_union_high_level}
+In proving Lemma~\ref{lem:cp_in_ball_union_and_distance_hint}, we require the following lemma.
 \begin{tcblemma}{$\widetilde{\text{CP}}_P$ Flattening}{}
   If $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$ and $q \in \bigcup_{p \in P} B_P(p, c)$, then $(x, y)$ is closer than $(p, q)$.
 \end{tcblemma}
-Your first thought might be that this should hold trivially\footnote{
+After staring for a bit, you might think this lemma should hold trivially\footnote{
   The reader may be thinking this of many results in this report... and they are not alone.
   Such is life in formal verification, it seems.
 }.
 After all, isn't this exactly what $\widetilde{\text{CP}}_P$ is meant to express?
 Indeed it is, but the proof of this fact is not automatic.
-The reason is that $\widetilde{\text{CP}}_P$ is \textit{stronger} than the simpler statement of being the closest pair in $\bigcup_{p \in P} B_P(p, c)$, because it enforces a particular \textit{process} by which the closest pair was arrived at.
+The reason is that $\widetilde{\text{CP}}_P$ is more specific than the simpler statement of being the closest pair in $\bigcup_{p \in P} B_P(p, c)$, because it enforces a particular \textit{process} by which the closest pair was arrived at.
 This process is recursive, so to arrive at the ``flattened'' proposition above, we need to ``unroll'' it via induction.
 But induction on what?
 
@@ -557,6 +607,40 @@ There are two takeaways from this proof:
 % The inductive predicate we define is a means of elaborating on the latter property so that its recursion structure is aligned with that of our algorithm.
 
 \subsubsection{Bounded Norm $\Rightarrow$ In $\ell_\infty$ Ball}
+On the path to proving Lemma~\ref{lem:aux_finds_cp_in_ball_union}, we need lemmas showing that we check the correct grid indices.
+The lemma below says that if the distance between two points is bounded, then checking in a hypercube of a certain radius around one of them suffices to find one of the points.
+\begin{tcblemma}{Hypercube Containment for Bounded Norm}{}
+  If $\|(a, b)\| \leq c$, then $(a, b) \in \texttt{get\_hypercube}(\sqrt{c}^\N + 1)$.
+\end{tcblemma}
+There's nothing conceptually tricky about this lemma.
+However, it turned out to be an absolute pain to prove in Lean.
+
+We first break down the proof goal with a lemma showing it suffices to prove
+\[ -\coerce{\sqrt{c}^\N + 1}{\Z} \leq a, b \leq \coerce{\sqrt{c}^\N + 1}{\Z}. \]
+Recall, $\coerce{n}{\Z}$ represents a coercion of $n \in \N$ into an integer.
+This coercion is a trivial inclusion, but we were unable to convince Lean of this simple fact.
+
+We now focus on just $-\coerce{\sqrt{c}^\N + 1}{\Z} \leq a$.
+The other cases are similar.
+
+ one side of the inequalities and just one of the variables
+
+We then proceed by contradiction, giving us the hypothesis that
+$\neg(-\coerce{\sqrt{c}^\N + 1}{\Z} \leq a)$.
+To get this into the more useful form $a < -\coerce{\sqrt{c}^\N + 1}{\Z}$ required 4 lines of code.
+
+
+Recall, we have only proven a portion of the original proof goal, and we stated the other three cases were similar.
+To prove the other cases, we copied the first case three times and made slight modifications.
+We did not sink much time into it, but in the time we did spend, it was nonobvious how to do anything better.
+
+% \uparrow^{\mathbb{Z}}\!\!
+
+\paragraph{Potential Improvements.}
+TODO include WLOG tactic
+TODO maybe I've been using the calc env wrong
+
+
 I think the takeaway from this case will be that proofs involving inequalities are fundamentally more difficult for proof assistants to automate.
 This is because there is an added degree of freedom in how the proof assistant can choose to instantiate lemmas.
 \todo{There should be some intuitive example we can give that motivate this difficulty}
@@ -613,6 +697,8 @@ Because the algorithm may return no pair---either when the distance hint is wron
 In the algorithm, we want to know when the recursive result pair is closer than any pair found in the current point's ball.
 Since either of these could actually be null, we have to case on their respective nullities.
 
+\subsection{Theorem Search}
+library\_search is good
 
 \subsection{Decidable Propositions}
 The expression $p \leq q$ is a proposition, so we may be able to \textit{prove} it true.
