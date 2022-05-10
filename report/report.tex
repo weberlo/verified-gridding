@@ -262,14 +262,14 @@ Here, we explain any notation in Table~\ref{fig:notation_summary} that was not e
   \hline
   $x\!y \leq z\!w$ & proposition that the \textit{nullable} pair $x\!y$ \\ & is closer together than $z\!w$ \\
   \hline
-  $\text{CP}(x, y)$ & $(x, y)$ is the closest pair in $P$ \\
+  $\text{CP}_P(x, y)$ & $(x, y)$ is the closest pair in $P$ \\
   % \coloneqq (x, y) = \argmin_{(p, q) \in P} \| p - q \|$ & $(x, y)
   \hline
   $B(p, c)$ & set of points $\in \Z^2$ within distance $c$ of the point $p$ \\
   \hline
   $B_P(p, c)$ & set of points $\in P$ within distance $c$ \\ & of the point $p$ (i.e., $B(p, c) \cap P$) \\
   \hline
-  $\widetilde{\text{CP}}(x\!y)$ & $x\!y$ is the closest pair in $\bigcup_{p \in P} \left(p, B_P(p, c)\right)$, \\ & or $\mathsf{none}$ if there are no pairs in this set \\
+  $\widetilde{\text{CP}}_P(x\!y)$ & $x\!y$ is the closest pair in $\bigcup_{p \in P} \left(p, B_P(p, c)\right)$, \\ & or $\mathsf{none}$ if there are no pairs in this set \\
   \hline
   $G(P, c) : (\mathsf{grid} : \Z^2 \rightharpoonup [\Z^2]) \times$ & grid constructed from set of points $P$ \\
   $(P : [\Z^2]) \times$ & and distance hint $c$ \\
@@ -324,8 +324,8 @@ Conceptually, our algorithm draws balls around points in $P$ and finds other poi
 To express this concept in our proofs, we augment standard $B(p, c)$ notation to $B_{P}(p, c) \coloneqq B(p, c) \cap P$, which includes all points in $P$ lying within $B(p, c)$.
 
 \paragraph{Closest pair in union of balls.}
-As we will see in Section~\ref{sec:change_ih}, directly proving the $(x, y)$ returned by our algorithm is the closest pair (i.e., $\text{CP}(x, y)$) doesn't work.
-Instead, we define a predicate $\widetilde{\text{CP}}(x\!y)$, expressing that $x\!y$ is the closest pair among all pairs in balls we draw around points in $P$.
+As we will see in Section~\ref{sec:change_ih}, directly proving the $(x, y)$ returned by our algorithm is the closest pair (i.e., $\text{CP}_P(x, y)$) doesn't work.
+Instead, we define a predicate $\widetilde{\text{CP}}_P(x\!y)$, expressing that $x\!y$ is the closest pair among all pairs in balls we draw around points in $P$.
 Then, we prove our algorithm satisfies this predicate.
 
 \paragraph{Grid construction.}
@@ -475,17 +475,17 @@ The closest pair at this step includes a point outside the list of processed poi
 \end{figure}
 We need a proof goal that provides us with a different, stronger induction hypothesis.
 Our algorithm, conceptually speaking, draws balls around each point and finds the closest pair among all balls seen so far.
-To capture this process in a predicate, we create a recursively defined predicate $\widetilde{\text{CP}}(x\!y)$ satisfying the following rules:
+To capture this process in a predicate, we create a recursively defined predicate $\widetilde{\text{CP}}_P(x\!y)$ satisfying the following rules:
 \begin{itemize}
-  \item \textbf{No points:} $\widetilde{\text{CP}}(\mathsf{none}, [])$
-  \item \textbf{Closest remains closest:} If $\widetilde{\text{CP}}(x\!y, P')$ and $x\!y$ is closer than all points in $B_P(p, c)$, then $\widetilde{\text{CP}}(x\!y, p :: P')$.
-
+  \item \textbf{No points:} $\widetilde{\text{CP}}_P(\mathsf{none}, [])$
+  \label{case:rec_pt_closer}
+  \item \textbf{Recursive point closer:} If $\widetilde{\text{CP}}_P(x\!y, P')$ and $x\!y$ is closer than all points in $B_P(p, c)$, then $\widetilde{\text{CP}}_P(x\!y, p :: P')$.
   \label{case:curr_pt_closer}
-  \item \textbf{Current point closer:} If $\widetilde{\text{CP}}(x\!y, P')$, but there is a point $q \in B_P(p, c)$ closer to $p$ than any other point in $B_P(p, c)$, and $(p, q)$ is closer than $x\!y$, then $\widetilde{\text{CP}}(\mathsf{some(p, q)}, p :: P')$.
+  \item \textbf{Current point closer:} If $\widetilde{\text{CP}}_P(x\!y, P')$, but there is a point $q \in B_P(p, c)$ closer to $p$ than any other point in $B_P(p, c)$, and $(p, q)$ is closer than $x\!y$, then $\widetilde{\text{CP}}_P(\mathsf{some(p, q)}, p :: P')$.
 \end{itemize}
-Now, instead of proving \texttt{aux} finds $(x, y)$ such that $\text{CP}(x, y)$, we prove it finds $(x, y)$ such that $\widetilde{\text{CP}}(\mathsf{some}(x, y))$, yielding the correct induction hypothesis and allowing the proof to go through.
+Now, instead of proving \texttt{aux} finds $(x, y)$ such that $\text{CP}_P(x, y)$, we prove it finds $(x, y)$ such that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$, yielding the correct induction hypothesis and allowing the proof to go through.
 
-With this lemma proven, we prove another lemma that if $(x, y)$ satisfies $\widetilde{\text{CP}}(\mathsf{some}(x, y))$ and the closest pair lies in the range $(1, c]$, then $(x, y)$ is the closest pair, completing the result.
+With this lemma proven, we prove another lemma that if $(x, y)$ satisfies $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$ and the closest pair lies in the range $(1, c]$, then $(x, y)$ is the closest pair, completing the result.
 
 % \todo{Import graphic from presentation}
 % This one is interesting because it highlights the concept of strengthening (or rather, ``aligning'') the induction hypothesis.
@@ -502,48 +502,59 @@ With this lemma proven, we prove another lemma that if $(x, y)$ satisfies $\wide
 
 
 \subsubsection{Closest Pair In Ball Union Closer Than All Points Within Distance $\mathbf{c}$}
-In proving that $\widetilde{\text{CP}}(\mathsf{some}(x, y), P)$ and the distance hint imply $\text{CP}(x, y)$, we require the following lemma.
-\begin{tcblemma}{$\widetilde{\text{CP}}$ Flattening}{}
-  If $\widetilde{\text{CP}}(\mathsf{some}(x, y))$ and $q \in \bigcup_{p \in P} B_P(p, c)$, we have $\mathsf{some}(x, y) \leq \mathsf{some}(p, q)$.
+In proving that $\widetilde{\text{CP}}_P(\mathsf{some}(x, y), P)$ and the distance hint imply $\text{CP}_P(x, y)$, we require the following lemma.
+\begin{tcblemma}{$\widetilde{\text{CP}}_P$ Flattening}{}
+  If $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$ and $q \in \bigcup_{p \in P} B_P(p, c)$, then $(x, y)$ is closer than $(p, q)$.
 \end{tcblemma}
 Your first thought might be that this should hold trivially\footnote{
   The reader may be thinking this of many results in this report... and they are not alone.
   Such is life in formal verification, it seems.
 }.
-After all, isn't this exactly what $\widetilde{\text{CP}}$ is meant to express?
+After all, isn't this exactly what $\widetilde{\text{CP}}_P$ is meant to express?
 Indeed it is, but the proof of this fact is not automatic.
-The reason is that $\widetilde{\text{CP}}$ is \textit{stronger} than the simpler statement of being the closest pair in $\bigcup_{p \in P} B_P(p, c)$, because it enforces a particular \textit{process} by which the closest pair was arrived at.
+The reason is that $\widetilde{\text{CP}}_P$ is \textit{stronger} than the simpler statement of being the closest pair in $\bigcup_{p \in P} B_P(p, c)$, because it enforces a particular \textit{process} by which the closest pair was arrived at.
 This process is recursive, so to arrive at the ``flattened'' proposition above, we need to ``unroll'' it via induction.
 But induction on what?
 
 We may wish to induct on the list of points $P$, but this causes an issue in the case where the current point is closer (see \ref{case:curr_pt_closer}).
-Since we're inducting on $P$,
+Since we're inducting on $P$, all other variables remain fixed in the induction hypothesis.
+So if we're trying to prove that $(x,y)$ is closer than $(p,q)$ and we want to apply the induction hypothesis, we need to provide a proof that $(x, y)$ satisfies $\widetilde{\text{CP}}_{P'}(\mathsf{some}(x, y))$.
+However, in the case where the current point is closer, we have that some other point pair $x\!y'$ was the closest pair in the ball union for the sublist $P'$.
+Thus, we only have $\widetilde{\text{CP}}_{P'}(x\!y')$, and we are unable to apply the IH.
 
-This case is important because it cleanly highlights how we are working at a level below conventional mathematics.
-The proposition $\widetilde{\text{CP}}(x\!y)$ that we have intuitively been referring to as the closest pair in the union of balls
+The issue is that inducting on $P$ leaves $(x, y)$ fixed and does not account for the fact that the closest pair changes as we recurse.
+What else can we induct on then?
+Well, induction can be performed on any type satisfying certain conditions\footnote{In particular, we must be able to impose a \textbf{\textit{well-founded order}} upon it.}, and it so happens that our recursive predicate $\widetilde{\text{CP}}$ satisfies them.
+This induction target solves our problem because the inductive hypothesis changes depending on whether we are in the case where the recursive result remains the closest or a pair in the current point's ball is closer.
 
-We would intuitively expect $\widetilde{\text{CP}}(x\!y)$ to imply $\forall q \in $
+There are two takeaways from this proof:
+\begin{itemize}
+  \item In verification, you often define predicates that are aligned with the recursion structure of an algorithm, for the reasons outlined in Section~\ref{sec:change_ih}.
+  However, this often leads to an abstraction mismatch, because these predicates don't directly encode high-level mathematical properties.
+  Thus, it is common to prove lemmas that lift these low-level predicates to intuitive statements you can work with in other proofs.
+  \item Induction on recursively defined predicates can yield stronger induction hypotheses or, at least, hypotheses that are more closely aligned with the proof goal.
+\end{itemize}
+\todo{Update CP instances in diagram to have P subscript}
 
+% \paragraph{Induction on Recursively Generated Propositions.}
+% When you have a recursively defined proposition, sometimes induction on a single index (think of it like a variable) doesn't give the right induction hypothesis.
+% For example, when proving that the closest pair in the ball union is the closest pair among all points in the ball union \todo{need to go to the level of logic to make this statement not sound trivial}, inducting on the list of points we recurse over gives an unhelpful induction hypothesis in the case where we update the pair.
+% This is because the pair is held fixed throughout the induction (we're only inducting over the point list), but the pair changes in the algorithm when we encounter a closer pair.
+% To achieve the correct IH, we induct on the $\text{CP}_P{\mathcal{B}(\mathsf{ps}, c)}(xy)$ proposition itself.
+% After all, we defined it recursively, so structural induction applies equally well to it.
+% Because we vary multiple parameters in some cases of the proposition, this induction structure is aligned with the process and gives us the proper IH in the update case.
 
-\paragraph{Induction on Recursively Generated Propositions.}
-When you have a recursively defined proposition, sometimes induction on a single index (think of it like a variable) doesn't give the right induction hypothesis.
-For example, when proving that the closest pair in the ball union is the closest pair among all points in the ball union \todo{need to go to the level of logic to make this statement not sound trivial}, inducting on the list of points we recurse over gives an unhelpful induction hypothesis in the case where we update the pair.
-This is because the pair is held fixed throughout the induction (we're only inducting over the point list), but the pair changes in the algorithm when we encounter a closer pair.
-To achieve the correct IH, we induct on the $\text{CP}_{\mathcal{B}(\mathsf{ps}, c)}(xy)$ proposition itself.
-After all, we defined it recursively, so structural induction applies equally well to it.
-Because we vary multiple parameters in some cases of the proposition, this induction structure is aligned with the process and gives us the proper IH in the update case.
+% In general, if you have \textit{multiple} arguments that change throughout the algorithm, induction on any single argument will only capture the variance in one of the parameters.
+% Induction on the structure of the proposition.
 
-In general, if you have \textit{multiple} arguments that change throughout the algorithm, induction on any single argument will only capture the variance in one of the parameters.
-Induction on the structure of the proposition.
+% \paragraph{Side Note.} It seems intuitive that the predicate we've been calling ``the closest pair in the ball union'' should satisfy the property that any pair within distance $c$ will be at least as far away as the closest pair in the ball union.
 
-\paragraph{Side Note.} It seems intuitive that the predicate we've been calling ``the closest pair in the ball union'' should satisfy the property that any pair within distance $c$ will be at least as far away as the closest pair in the ball union.
+% You could argue then that we've been using the wrong terminology for the recursively defined predicate.
+% This lemma about the predicate is the property we desired all along and the predicate is somehow lower level than this property, and it shows more than just the property, but rather a \textit{process} we use to arrive at the property.
 
-You could argue then that we've been using the wrong terminology for the recursively defined predicate.
-This lemma about the predicate is the property we desired all along and the predicate is somehow lower level than this property, and it shows more than just the property, but rather a \textit{process} we use to arrive at the property.
-
-This sheds some light on what we've done mathematically.
-We've taken the closest pair predicate and refactored it into the distance hint and the lemma that we find the closest pair within the ball union.
-The inductive predicate we define is a means of elaborating on the latter property so that its recursion structure is aligned with that of our algorithm.
+% This sheds some light on what we've done mathematically.
+% We've taken the closest pair predicate and refactored it into the distance hint and the lemma that we find the closest pair within the ball union.
+% The inductive predicate we define is a means of elaborating on the latter property so that its recursion structure is aligned with that of our algorithm.
 
 \subsubsection{Bounded Norm $\Rightarrow$ In $\ell_\infty$ Ball}
 I think the takeaway from this case will be that proofs involving inequalities are fundamentally more difficult for proof assistants to automate.
