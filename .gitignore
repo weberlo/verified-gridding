@@ -9,3 +9,5 @@
 *.pdf
 *.synctex.gz
 report/_minted-report/
+.DS_Store
+*.toc

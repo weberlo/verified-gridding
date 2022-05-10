@@ -7,6 +7,9 @@
 \usepackage{titlesec}
 \usepackage{tcolorbox}
 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 \DeclareUnicodeCharacter{3B4}{$\bm{\delta}$}
 \DeclareUnicodeCharacter{3B8}{$\bm{\theta}$}
 \DeclareUnicodeCharacter{3BB}{$\lambda$}
@@ -37,9 +40,11 @@
 \begin{document}
 
 \title{%
-  Final Project Report
+  Formal Verification of a Closest Pair Algorithm
+  % \\
+  % Final Project Report
   \\[0.5em]
-  \large Geometric Computing \\
+  \large MIT 6.838 Final Project \\
 }
 
 \author{
@@ -55,8 +60,12 @@ loganweb@mit.edu
 
 \maketitle
 
+\tableofcontents
+
 \section{TODOs}
 Recall, Piotyr said what's most useful for him is statistics (breakdowns of code vs. proof) and ``war stories''.
+
+Link to Github repo.
 
 \section{Introduction}
 In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
@@ -96,50 +105,343 @@ The concrete goal I set out with on this project was to implement and formally v
 My background is not in formal verification, but I do have a background in programming languages broadly.
 As someone who has been skeptical of the efficacy of verification, part of my goal with this project is to give perspective to outsiders and tell them what they should expect, without sugar-coating it and saying ``you'll get used to it''.
 
-\section{The Problem Specification}
-\begin{minted}{lean}
-def closest_pair (p q : point) (ps : list point) : Prop :=
-  (p ∈ ps) ∧ (q ∈ ps) ∧ (p ≠ q) ∧
-  (∀ (r s : point), r ≠ s → ∥p - q∥ ≤ ∥r - s∥)
+Our final achievements were
+\footnote{
+  Code can be found at \href{https://github.com/weberlo/verified-gridding}{https://github.com/weberlo/verified-gridding}.
+}:
+\todo{Make it like a TODO list with checkmarks on things we completed}
+\begin{itemize}
+  \item An implementation for a restricted form of the closest pair (with help) problem.
+  \item A ``broad strokes'' verification of the algorithm, with many low-level lemmas assumed to be true.
+\end{itemize}
 
-def closest_pair_with_help (p q : point) (ps : list point) (c : ℕ⁺) : Prop :=
-  (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)
-\end{minted}
-\newpage
+\todo{Do some fenceposting}
+
+\section{Background}
+In this section, weeeeee
+\todo{Fencepost}
+
+\subsection{Closest Pair With Help}\label{sec:cp_with_help}
+Recall the problem specification for closest pair (with help) below.
+
+\begin{tcbproblem}{\sc{Closest Pair With Help}}{}
+  Given a set of points $P \subseteq \R^d$, find the closest pair
+  \[ (p^*, q^*) = \argmin_{(p,q) \in P\times P, p\neq q} \|p - q\|_2, \]
+  knowing $\|p^* - q^*\|_2 \in (t, ct]$.
+\end{tcbproblem}
+
+The algorithm we saw in Lecture 11 to solve this problem is as follows.
+\begin{algorithm}
+  \caption{Closest Pair With Help}\label{alg:cp_with_help}
+  \begin{algorithmic}
+  \State $g \gets $ grid with side lengths $k = 1/\sqrt{d}$.
+  \State Insert each point $p$ in the bucket in $g$ with index $\lfloor p / k \rfloor$.
+  \State $x\!y \gets \mathsf{none}$
+  \For{$p \in P$}
+    \For{$\vec{v} \in [-\lceil c + 1 \rceil, \lceil c + 1 \rceil]^d$}
+      \State $x\!y \gets \argmin \{ x\!y, \argmin_{q \in g[\lfloor p+\vec{v} / k \rfloor]}\{\| p - q \|\}\}$
+    \EndFor
+  \EndFor
+  \State \Return $x\!y$
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Simplified Closest Pair With Help}
+For the sake of both simplicity and computability, we impose the following restrictions on the specification in Section~\ref{sec:cp_with_help}:
+\begin{itemize}
+  \item \textbf{The points have integral components.} Lean does not include facilities for computing with real numbers, though, in principle, it could---with all results computed up to \textit{finite} precision.
+  Without such facilities, we are left with $\Q$ or $\Z$ as natural carrier types.
+  We chose $\Z$, believing it would be simpler.
+  In hindsight, using $\Q$ may have been just as easy and perhaps easier.
+  Since $\Q$ forms a field, it has multiplicative inverses, which simplifies algebra.
+  \item \textbf{The points are in the plane.} This assumption was for simplicity on the first pass through the verification.
+  We now believe generalizing to arbitrary dimension would require nontrivial changes in the implementation and the proofs.
+  \todo{Would it tho?}
+  \item \textbf{The norm is the \textit{squared} Euclidean norm.}
+  We're working with integers and the outermost operation of $\| \cdot \|_2$ is a square root, which could return a value outside of $\Z$.
+  Our fix is to consider the squared Euclidean norm $\| \cdot \|_2^2$.
+  \item \textbf{The points are scaled so $t=1$.}
+  We assumed this property in class, but because we're working with integers, it's a stronger assumption; scaling down could lose information and cause us to return the wrong pair.
+\end{itemize}
+With these restrictions, the specification now looks like the following, with changes highlighted in blue.
+\begin{tcbproblem}{\sc{Closest Pair With Help (Restricted)}}{}
+  Given a set of points $P \subseteq {\color{blue}\Z^2}$, find the closest pair
+  \[ (p^*, q^*) = \argmin_{(p,q) \in P\times P, p\neq q} {\color{blue}\|p - q\|_2^2}, \]
+  knowing $\|p^* - q^*\|_2^2 \in {\color{blue}(1, c]}$.
+\end{tcbproblem}
+
+\todo{Recap the algorithm.}
+
+\paragraph{Trivial Grids.}
+A notable corollary of these restrictions is that the mapping from points to their grid indices is the identity map.
+Recall, we wish to set the grid size $k$ so the diameter of each cell is $< 1$, guaranteeing at most one point per cell.
+We assume the bottom and left cell edges are inclusive and the top and right edges are exclusive.
+Then, the furthest integer point from the bottom left $(0, 0)$ is at $(k - 1, k - 1)$.
+\begin{align*}
+  \| (k - 1, k-1) \|_2^2 & < 1 \\
+  2(k-1)^2 & < 1
+\end{align*}
+The only integral solution is 1, so each point's grid index is itself.
+
+\paragraph{Different Search Bounds.}
+Knowing the closest pair distance is at most $c$, our norm gives us bounds on how many cells away we must search.
+If $\| p^* - q^* \| \leq c$, then $(p_1^* - q_1^*)^2 + (p_2^* - q_2^*)^2 \leq c$, meaning $(p_1^* - q_1^*)^2\leq c$ and $(p_2^* - q_2^*)^2 \leq c$.
+Then for each component $a$ of $p$ and $b$ of $q$, we have
+\begin{align*}
+  (a - b)^2 & \leq c \\
+  |a - b| & \leq \sqrt{c}^\N
+\end{align*}
+where $\sqrt{n}^\N$ is the largest number $k$ such that $k^2 \leq n$.
+So if we search hypercubes of radius $\sqrt{c}^\N + 1$, we will certainly find the closest pair.
+
+\paragraph{The Simplified Algorithm.}
+With this simplified specification and the observations above, we have the following modifications to the algorithm (again, highlighted in blue).
+
+\begin{algorithm}
+  \caption{Simplified Closest Pair With Help}\label{alg:cp_with_help_simple}
+  \begin{algorithmic}
+  \State $g \gets $ grid with side lengths ${\color{blue}k = 1}$.
+  \State Insert each point $p$ in the bucket in $g$ with index $\color{blue}p$.
+  \State $x\!y \gets \mathsf{none}$
+  \For{$p \in P$}
+    \For{$\vec{v} \in {\color{blue}[-(\sqrt{c}^\N + 1), \sqrt{c}^\N + 1]^2}$}
+      \State $x\!y \gets \argmin \{ x\!y, \argmin_{q \in {\color{blue}g[p+\vec{v}]}}\{\| p - q \|\}\}$
+    \EndFor
+  \EndFor
+  \State \Return $x\!y$
+  \end{algorithmic}
+\end{algorithm}
+
+\todo{Include diagram from presentation?}
+\todo{Add a section somewhere discussing how we might tackle the problem of removing these assumptions}
+
+% \begin{minted}{lean}
+% def closest_pair (p q : point) (ps : list point) : Prop :=
+%   (p ∈ ps) ∧ (q ∈ ps) ∧ (p ≠ q) ∧
+%   (∀ (r s : point), r ≠ s → ∥p - q∥ ≤ ∥r - s∥)
+
+% def closest_pair_with_help (p q : point) (ps : list point) (c : ℕ⁺) : Prop :=
+%   (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)
+% \end{minted}
+% \newpage
+
+\subsection{Notation}
+Here, we explain any notation in Table~\ref{fig:notation_summary} that was not explained in the previous subsections and that will be useful in later sections.
+\todo{Double back after the fact and check which symbols we actually need for points}
+\begin{figure}[H]
+\begin{center}\label{fig:notation_summary}
+\begin{tabular} {|| r | l ||}
+  \hline
+  Notation & Description \\
+  \hline
+  \hline
+  $P \subseteq \Z^2$ & set of input points to the algorithm \\
+  \hline
+  $p, q, r, s, x, y, z, w \in P$ & points in $P$ \\
+  \hline
+  $a, b \in \Z$ & integers \\
+  \hline
+  $k, m, n \in \N$ & natural numbers \\
+  \hline
+  $c \in \N^+$ & the distance hint \\
+  \hline
+  $(P \times P)^?$ & set of potentially null point pairs in $P$ \\
+  \hline
+  $x\!y, z\!w, r\!s \in (P \times P)^?$ & potentially null pairs of points in $P$ \\
+  \hline
+  $\mathsf{some}(x, y) \in (P \times P)^?$ & definitely non-null pairs of points in $P$ \\
+  \hline
+  $\mathsf{none} \in (P \times P)^?$ & definitely null pairs of points in $P$ \\
+  \hline
+  $x\!y \leq z\!w$ & proposition expressing that the \textit{nullable} pair $x\!y$ \\ & is closer together than $z\!w$ \\
+  \hline
+  $\text{CP}(x, y)$ & $(x, y)$ is the closest pair in $P$ \\
+  % \coloneqq (x, y) = \argmin_{(p, q) \in P} \| p - q \|$ & $(x, y)
+  \hline
+  $B(p, c)$ & set of points $\in \Z^2$ within distance $c$ of the point $p$ \\
+  \hline
+  $B_P(p, c)$ & set of points $\in P$ within distance $c$ \\ & of the point $p$ (i.e., $B(p, c) \cap P$) \\
+  \hline
+  $\widetilde{\text{CP}}(x\!y)$ & $x\!y$ is the closest pair in $\bigcup_{p \in P} \left(p, B_P(p, c)\right)$, \\ & or $\mathsf{none}$ if there are no pairs in this set \\
+  \hline
+  $G(P, c) : (\mathsf{grid} : \Z^2 \rightharpoonup [\Z^2]) \times$ & grid constructed from set of points $P$ \\
+  $(P : [\Z^2]) \times$ & and distance hint $c$ \\
+  $(c : \N^+){\color{white}\times}$ & \\
+  \hline
+  $g$ & arbitrary grid structure \\
+  \hline
+  $g[p]$ & points in cell at index $p$ \\
+  \hline
+  $\| \cdot \|$ & the \textit{squared} Euclidean norm \\
+  \hline
+  $\sqrt{n}^\N$ & the natural number square root \\
+  \hline
+  $\lfloor p \rfloor$ & pointwise application of floor function to $p$ \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Summary of notation used throughout our report}
+\end{figure}
+\todo{Could clean this table up with multitable maybe?}
+\todo{Should we use list notation for G(P, c)?}
+\todo{Swap argument order of $G$ to $G(P, c)$}
+\todo{Add list cons notation, list subset notation, and $l$ for a list and $L$ for a list of lists}
+\todo{Mark lemmas that should exist in Mathlib as blue in the diagram}
+
+Most of our notation is standard or self-explanatory, so we focus on motivating the outliers.
+
+\paragraph{Potentially null point pairs.}
+Because the algorithm searches for pairs within balls around points, we must account for the case where there are no such pairs.
+We handle this outcome by lifting the type of point pairs $(P \times P)$ to the type $(P \times P)^?$ of possibly null point pairs.
+This type has inhabitants of the form $\mathsf{none}$, expressing a null pair, and $\mathsf{some}(x, y)$, expressing a non-null pair.
+When we have a term of type $(P \times P)^?$, and we don't yet know whether it's null, we write it as $x\!y$.
+
+% In accordance with functional programming convention, we express a pair of points being null with the term $\mathsf{none}$, and we express non-null pairs of points $(x, y)$ with the term $\mathsf{some}(x, y)$.
+
+\paragraph{Ordering on potentially null point pairs.}
+In the algorithm, we frequently compare a single ball's closest pair to the closest pair from a lower recursion level.
+Both of these results could be null, so we must case on whether zero, one, or both are null and choose the ``closest'' result accordingly.
+
+Instead of littering our code with casework on nullable pairs, we impose an order $x\!y \leq z\!w$ on $(P \times P)^?$, with $\mathsf{none}$ representing a pair that is infinitely distant.
+Our order satisfies the following rules:
+\begin{align*}
+  \mathsf{none} & \leq \mathsf{none} \\
+  \mathsf{none} & \not\leq \mathsf{some}(z, w) \\
+  \mathsf{some}(x, y) & \leq \mathsf{none} \\
+  (\mathsf{some}(x, y) \leq \mathsf{some}(z, w)) &\Leftrightarrow (\|x - y\| \leq \|z - w\|)
+\end{align*}
+
+\paragraph{Ball of points in $P$.}
+Conceptually, our algorithm draws balls around points in $P$ and finds other points in $P$ lying within those balls.
+To express this concept in our proofs, we augment standard $B(p, c)$ notation to $B_{P}(p, c) \coloneqq B(p, c) \cap P$, which includes all points in $P$ lying within $B(p, c)$.
+
+\paragraph{Closest pair in union of balls.}
+As we will see in Section~\ref{sec:change_ih}, directly proving the $(x, y)$ returned by our algorithm is the closest pair (i.e., $\text{CP}(x, y)$) doesn't work.
+Instead, we define a predicate $\widetilde{\text{CP}}(x\!y)$, expressing that $x\!y$ is the closest pair among all pairs in balls we draw around points in $P$.
+Then, we prove our algorithm satisfies this predicate.
+
+\paragraph{Grid construction.}
+We require a few lemmas expressing properties about the grid structure, so we notate it as a tuple $G(P, c)$ with fields
+\begin{itemize}
+  \item $(\mathsf{grid} : \Z^2 \rightharpoonup [\Z^2])$: the hash table mapping grid indices to cells containing lists of points.
+  \item $(P : [\Z^2])$: the set of points used to generate the grid.
+  We need to carry this data around to express relations between the set of input points and the $\mathsf{grid}$ we create.
+  \item $(c : \N^+)$: the distance hint.
+  We include this for similar reasons to why we include $P$.
+\end{itemize}
+When we don't have access to the parameters a grid was constructed with, we notate it as $g$.
+
+% \begin{minted}{lean}
+% def find_closest_pair (ps : list point) (c : ℕ⁺) : (point × point) := sorry
+
+% theorem find_closest_pair_correct :
+%   ∀ (ps : list point) (c : ℕ⁺),
+%     (∃ (p q : point),
+%       (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
+%     (∃ (p q : point),
+%       find_closest_pair ps c = (p, q) ∧
+%       closest_pair p q ps) := begin
+%   sorry
+% end
+% \end{minted}
+
+\section{Implementation}
+We won't waste much breath on the implementation.
+
+\subsection{Code Structure}
+\todo{Try to assign mathematical notation to each of these}
+\begin{center}
+\begin{tabular} {|| c | c | c ||}
+  \hline
+  Function Name & Signature & Description \\
+  \hline
+  \hline
+  \texttt{find\_closest\_pair} & & \\
+  \hline
+  \texttt{aux} & & \\
+  \hline
+  \texttt{grid\_points} & & \\
+  \hline
+  \texttt{min\_dist\_pair} & & \\
+  \hline
+  \texttt{mdp\_with} & & \\
+  \hline
+  \texttt{get\_grid\_idx} & & \\
+  \hline
+  \texttt{get\_kernel} & & \\
+  \hline
+  \texttt{get\_idxs} & & \\
+  \hline
+  \texttt{lift\_option\_list} & & \\
+  \hline
+  \texttt{get\_neighbs} & & \\
+  \hline
+\end{tabular}
+\end{center}
 
 
-\begin{minted}{lean}
-def find_closest_pair (ps : list point) (c : ℕ⁺) : (point × point) := sorry
-
-theorem find_closest_pair_correct :
-  ∀ (ps : list point) (c : ℕ⁺),
-    (∃ (p q : point),
-      (closest_pair p q ps) ∧ (1 < ∥ p - q ∥) ∧ (∥ p - q ∥ ≤ c)) →
-    (∃ (p q : point),
-      find_closest_pair ps c = (p, q) ∧
-      closest_pair p q ps) := begin
-  sorry
-end
-\end{minted}
-
-\section{Proof Strategy}
+\section{Verification}
 \todo{Give top-down proof strategy spiel}
 
+\todo{Somehow mark the goal lemma about find closest pair in the figure.  Can't bold it because we're already bolding the lemmas of interest.  Maybe a star?  Or big letters saying "GOAL"}
+\begin{figure}[H]
+  \begin{center}
+  \includegraphics[width=\linewidth]{res/proof_dependency}
+  \end{center}
+  \caption{
+    Graph capturing the dependency of each lemma/theorem on other lemmas.
+    An edge exists from $a$ to $b$ when $a$ is used by $b$ (e.g., a lemma with high in-degree uses many lemmas).
+    A dashed border means the lemma has not been proven.
+    A bold border means the lemma is important/interesting/difficult, and we cover it in Section~\ref{sec:war_stories}.
+  }
+\end{figure}
 
-\section{Integer Grids}
-\begin{align*}
-  \| (k - 1, k-1) \|_2^2 &\leq 1 \\
-  2(k-1)^2 & \leq 1 \\
-  % (k-1)^2 + (k-1)^2 & \leq 1 \\
-  % 2(k^2 - 2k + 1) &\leq 1 \\
-  % \frac{1}{2}(2(k^2 - 2k + 1)) &\leq \frac{1}{2} \\
-  % k^2 - 2k + 1 &\leq 0
-\end{align*}
-The only integral solution is 1.
 
-Solution: $k=1$
+\subsection{Predicates}
+\begin{center}
+\begin{tabular} {|| c | c | c ||}
+  \hline
+  Predicate Name & Signature & Description \\
+  \hline
+  \hline
+  \texttt{pt\_in\_ball} & & \\
+  \hline
+  \texttt{closest\_pair} & & \\
+  \hline
+  \texttt{cp\_with\_help} & & \\
+  \hline
+  \texttt{closest\_pair\_in\_ball\_union} & & \\
+  \hline
+  \texttt{in\_opt\_list} & & \\
+  \hline
+  % \hline
+\end{tabular}
+\end{center}
 
-\section{Strengthening the Induction Hypothesis}
+% \begin{minted}{lean}
+% inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
+%   option (point × point) → list point → Prop
+% | no_ball (xy : option (point × point)) : closest_pair_in_balls xy []
+% | succ_ball (xy : option (point × point)) (p : point) (ps' : list point) :
+%     ((∃ (q : point), q ∈ qs ∧ ∥q - p∥ ≤ c) →
+%       ∃ (x y : point),
+%         xy = some (x, y) ∧
+%         (∀ (q : point),
+%             q ∈ qs →
+%             ∥q - p∥ ≤ c →
+%             ∥x - y∥ ≤ ∥q - p∥)) →
+%     closest_pair_in_balls xy ps' →
+%     closest_pair_in_balls xy (p :: ps')
+% \end{minted}
+
+\subsection{War Stories}\label{sec:war_stories}
+In this section, we cover proofs which were either conceptually interesting or highlight some of the difficulties of working with Lean.
+
+\subsubsection{{\large\texttt{aux}} Finds Closest Pair in Union of Balls}\label{sec:change_ih}
+
+\todo{Import graphic from presentation}
+This one is interesting because it highlights the concept of strengthening (or rather, ``aligning'') the induction hypothesis.
+
 Our core algorithm recurses on the list of points, combining results from subcalls to eventually arrive at the closest pair.
 Then it seems natural for our proof of the algorithm's correctness to mirror its definition, which we could achieve by inducting on the list of points.
 
@@ -150,25 +452,32 @@ Since we draw balls around each point that we process, we may pick points outsid
 
 Thus, we must strengthen the induction hypothesis to more closely align our analysis of the algorithm than the definition.
 
-\begin{minted}{lean}
-inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
-  option (point × point) → list point → Prop
-| no_ball (xy : option (point × point)) : closest_pair_in_balls xy []
-| succ_ball (xy : option (point × point)) (p : point) (ps' : list point) :
-    ((∃ (q : point), q ∈ qs ∧ ∥q - p∥ ≤ c) →
-      ∃ (x y : point),
-        xy = some (x, y) ∧
-        (∀ (q : point),
-            q ∈ qs →
-            ∥q - p∥ ≤ c →
-            ∥x - y∥ ≤ ∥q - p∥)) →
-    closest_pair_in_balls xy ps' →
-    closest_pair_in_balls xy (p :: ps')
-\end{minted}
 
-\section{Admitted Lemmas}
+\subsubsection{Closest Pair In Ball Union Closer Than All Points Within Distance $c$}
+\paragraph{Induction on Recursively Generated Propositions.}
+When you have a recursively defined proposition, sometimes induction on a single index (think of it like a variable) doesn't give the right induction hypothesis.
+For example, when proving that the closest pair in the ball union is the closest pair among all points in the ball union \todo{need to go to the level of logic to make this statement not sound trivial}, inducting on the list of points we recurse over gives an unhelpful induction hypothesis in the case where we update the pair.
+This is because the pair is held fixed throughout the induction (we're only inducting over the point list), but the pair changes in the algorithm when we encounter a closer pair.
+To achieve the correct IH, we induct on the $\text{CP}_{\mathcal{B}(\mathsf{ps}, c)}(xy)$ proposition itself.
+After all, we defined it recursively, so structural induction applies equally well to it.
+Because we vary multiple parameters in some cases of the proposition, this induction structure is aligned with the process and gives us the proper IH in the update case.
 
-\subsection{Likely Existing in Mathlib.}
+In general, if you have \textit{multiple} arguments that change throughout the algorithm, induction on any single argument will only capture the variance in one of the parameters.
+Induction on the structure of the proposition.
+
+\paragraph{Side Note.} It seems intuitive that the predicate we've been calling ``the closest pair in the ball union'' should satisfy the property that any pair within distance $c$ will be at least as far away as the closest pair in the ball union.
+
+You could argue then that we've been using the wrong terminology for the recursively defined predicate.
+This lemma about the predicate is the property we desired all along and the predicate is somehow lower level than this property, and it shows more than just the property, but rather a \textit{process} we use to arrive at the property.
+
+This sheds some light on what we've done mathematically.
+We've taken the closest pair predicate and refactored it into the distance hint and the lemma that we find the closest pair within the ball union.
+The inductive predicate we define is a means of elaborating on the latter property so that its recursion structure is aligned with that of our algorithm.
+
+\subsubsection{Bounded Norm $\Rightarrow$ In $\ell_\infty$ Ball}
+
+\subsection{Admitted Lemmas}
+\subsubsection{Likely Existing in Mathlib.}
 The author believes most admitted lemmas about the integers can be mapped onto existing proofs in Mathlib.
 
 Examples:
@@ -178,7 +487,7 @@ Examples:
   \item Adding nonnegative integers is nonnegative.
 \end{itemize}
 
-\subsection{Not Existing in Mathlib}
+\subsubsection{Not Existing in Mathlib}
 \paragraph{Closest Pair.}
 Examples:
 \begin{itemize}
@@ -204,30 +513,9 @@ In principle, a norm instance could be provided whereby the output would be lift
 Then, perhaps we could transport theorems from normed spaces.
 This might work, but it could also introduce a lot of overhead, where we intersperse coercions between $\Z$ and $\R$ throughout our proofs.
 
-\section{Proof Overview}
-\todo{Add some kind of diagram or dependency graph showing which theorems use which lemmas}
 
-\section{Challenges}
-\paragraph{Induction on Recursively Generated Propositions.}
-When you have a recursively defined proposition, sometimes induction on a single index (think of it like a variable) doesn't give the right induction hypothesis.
-For example, when proving that the closest pair in the ball union is the closest pair among all points in the ball union \todo{need to go to the level of logic to make this statement not sound trivial}, inducting on the list of points we recurse over gives an unhelpful induction hypothesis in the case where we update the pair.
-This is because the pair is held fixed throughout the induction (we're only inducting over the point list), but the pair changes in the algorithm when we encounter a closer pair.
-To achieve the correct IH, we induct on the $\text{CP}_{\mathcal{B}(\mathsf{ps}, c)}(xy)$ proposition itself.
-After all, we defined it recursively, so structural induction applies equally well to it.
-Because we vary multiple parameters in some cases of the proposition, this induction structure is aligned with the process and gives us the proper IH in the update case.
-
-In general, if you have \textit{multiple} arguments that change throughout the algorithm, induction on any single argument will only capture the variance in one of the parameters.
-Induction on the structure of the proposition.
-
-\paragraph{Side Note.} It seems intuitive that the predicate we've been calling ``the closest pair in the ball union'' should satisfy the property that any pair within distance $c$ will be at least as far away as the closest pair in the ball union.
-
-You could argue then that we've been using the wrong terminology for the recursively defined predicate.
-This lemma about the predicate is the property we desired all along and the predicate is somehow lower level than this property, and it shows more than just the property, but rather a \textit{process} we use to arrive at the property.
-
-This sheds some light on what we've done mathematically.
-We've taken the closest pair predicate and refactored it into the distance hint and the lemma that we find the closest pair within the ball union.
-The inductive predicate we define is a means of elaborating on the latter property so that its recursion structure is aligned with that of our algorithm.
-
+\section{Statistics}
+\todo{Include statistics for number of lemmas you began proving, and maybe even proved, before realizing they weren't actually phrased correctly.}
 
 \section{Ergonomics}
 Because proof assistants are so sensitive to the syntactic phrasing of concepts, it is common that creating new notation has dramatic impacts on the ergonomics of proving things.
@@ -262,6 +550,9 @@ Now, every time you need to relate properties from those two locations, you need
 \todo{Add a table mapping mathematical notation to the name of the corresponding predicate}
 \todo{Write about how unicode is nice in the ergonomics section}
 
+\subsection{Subscripts and Superscripts}
+Lean has support for a predefined set of subscripts and superscripts (e.g., mostly numbers and letters), but it's not extensible enough to handle annotation with arbitrary expressions.
+For example, summation notation like $\sum_{i=0}^{\infty}$ cannot be supported.
 
 \subsection{The Reals}
 One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
@@ -278,6 +569,20 @@ Intuitively, we should be able to rewrite under binders, and it should all be un
 In regular programming, our grid structure should just consist of a hash table.
 However, when we need to prove properties of our grid structure, we need to carry around the list of points that generated it.
 If we need to show that the point returned by searching neighboring cells actually exists in the input list, we need the input list nearby to even state that property.
+
+Though we did not complete the proof that would require this mechanism, we believe it an interesting enough concept to bring to the attention of the reader.
+
+There's essentially a tradeoff here.
+If you want to state the properties about grids in terms of how the grid was constructed everywhere ($G(P, c)$), you can
+\begin{itemize}
+  \item You can leave properties about grids as global-level lemmas expressed as $G(P, c)$ has property $\mathcal{X}$, and this is possible because you have access to \textit{how} the grid was constructed---namely, the constructor $G(P, c)$.
+  \item You can express properties in terms of arbitrary grids $g$, but then any lemmas you require of arbitrary grids must be \textit{internalized} into the structure.
+  For example, if you wish that every $p \in P$ exists in some cell in $g.\mathsf{grid}$, a proof of this fact must be stored as a field within the grid structure.
+\end{itemize}
+Even though you and I know the only way to construct a grid is through $G(P, c)$, it's technically possible for another user to define a method that returns a grid satisfying the same type signature our grid structure has, and this grid could satisfy \textit{none} of the properties we want.
+
+These are the kinds of contingencies type theory guards against, but for the practicing programmer or mathematician, it becomes quite cumbersome to work with.
+
 
 \subsection{Lack of Applicable Lemmas}
 Because we made the decision to use integers instead of the reals, the norm we defined is not real-valued and does not satisfy the type signature of a normed space in Mathlib.  \todo{Check this is true.}
@@ -316,11 +621,15 @@ This blocks a lot of proof automation, because you may have coercions sprinkled 
 
 I also defined a separate type $\N^+$ for positive numbers, and I defined an associated coercion to $\N$.
 
+\subsection{Thinking in Terms of Induction}
+We're all familiar with proofs by induction, but likely not to the degree in which they're emphasized in proof assistants.
+To the formal verification expert or formal mathematician, induction is the workhorse of everything they do.
+
 \section{Conclusion}
 We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
 
 \paragraph{Benefits.}
-Verification forces you to write \textbf{very} clean code and develop concepts/notation that is natural for the algorithm.
+Verification encourages you to write \textbf{very} clean code and develop concepts/notation that is natural for the algorithm.
 There were multiple match statements in the main body originally, casing on whether we received a point in the current point's ball.
 The cleaner alternative was to lift operations on pairs of points to operate on \textit{nullable} pairs of points.
 As a result, the main body of our algorithm is now only 6 lines long.
@@ -337,6 +646,8 @@ Induction is one way of linearizing our reasoning, so it almost corresponds to t
 In many ways, formal verification is not unlike the process of writing proofs in mathematics broadly.
 There is a vague intuition why something is true, and all that's missing is the right language to express it.
 The process is less satisfying though, because the theorems don't speak the same truths of the world that they do in math, and it makes one question whether the process was worth it.
+
+It feels like fighting Hydra of Lerna.
 
 \paragraph{Alternative Ending.}
 Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.

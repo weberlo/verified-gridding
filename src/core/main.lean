@@ -10,7 +10,6 @@ import core.util
 import core.point
 import core.grid
 
-
 def pt_in_ball (p q : point) (c : ℕ⁺) (qs : list point) : Prop :=
   q ∈ qs ∧
   q ≠ p ∧
@@ -48,12 +47,12 @@ def mdp_with (p : point) (g : grid_2D) : option (point × point) :=
   let ps := get_neighbs p g in
   min_dist_pair p ps
 
-lemma range_in_kernel :
+lemma range_in_hypercube :
   ∀ (i j : ℤ) (n : ℕ),
     ((-(↑n) ≤ i) ∧ (i ≤ n) ∧
      (-(↑n) ≤ j) ∧ (j ≤ n))
     ↔
-    (i, j) ∈ (get_kernel n) := sorry
+    (i, j) ∈ (get_hypercube n) := sorry
 
 lemma norm_bd_on_coords :
   ∀ (a b : ℤ) (c : ℕ),
@@ -61,9 +60,9 @@ lemma norm_bd_on_coords :
     a*a ≤ c ∧ b*b ≤ c := sorry
   -- (Something bounding `a` and `b` below and above by (+|-)nat.sqrt(c) (not sure whether inclusive or exclusive))
 
-lemma nat_sqrt_plus_one_sq_gt_nat :
-  ∀ (c : ℕ),
-    ((nat.sqrt c) + 1)*((nat.sqrt c) + 1) > c := sorry
+-- lemma nat_sqrt_plus_one_sq_gt_nat :
+--   ∀ (c : ℕ),
+--     ((nat.sqrt c) + 1)*((nat.sqrt c) + 1) > c := sorry
 
 lemma sq_neg_lt :
   ∀ (a b : ℤ),
@@ -118,13 +117,13 @@ lemma coe_nat_nat_nop :
   ∀ (n : ℕ),
     (↑n : ℕ) = n := sorry
 
-lemma bounded_norm_in_kernel:
+lemma bounded_norm_in_hypercube:
   ∀ (ab : ℤ × ℤ) (c : ℕ),
     ∥ab∥ ≤ c →
-    (ab ∈ get_kernel ((nat.sqrt c) + 1)) := begin
+    (ab ∈ get_hypercube ((nat.sqrt c) + 1)) := begin
   intros ab c ab_le_c,
   cases ab with a b,
-  apply (range_in_kernel a b ((nat.sqrt c) + 1)).mp,
+  apply (range_in_hypercube a b ((nat.sqrt c) + 1)).mp,
   split,
   {
     by_cases h : -↑((nat.sqrt c) + 1) ≤ a,
@@ -404,7 +403,7 @@ lemma q_in_ball_means_grid_idx_in_get_idxs :
   exact b,
   split,
   {
-    apply bounded_norm_in_kernel,
+    apply bounded_norm_in_hypercube,
     exact exists_idx.left,
   },
   {
@@ -475,35 +474,35 @@ begin
   sorry
 end
 
-lemma min_dist_pair_includes_center :
-  ∀ (p : point) (ps : list point),
-    (∃ (z w : point), min_dist_pair p ps = some (z, w)) →
-    (∃ (q : point), min_dist_pair p ps = some (p, q)) := begin
-  sorry
-end
+-- lemma min_dist_pair_includes_center :
+--   ∀ (p : point) (ps : list point),
+--     (∃ (z w : point), min_dist_pair p ps = some (z, w)) →
+--     (∃ (q : point), min_dist_pair p ps = some (p, q)) := begin
+--   sorry
+-- end
 
-lemma pt_in_ball_mdp_is_some :
-  ∀ (p : point) (g : grid_2D),
-    (∃ (x : point), pt_in_ball p x g.c g.ps) →
-    (∃ (x : point), mdp_with p g = some (p, x)) := begin
-  intros p g exists_x_in_ball,
-  simp [mdp_with],
-  cases exists_x_in_ball with x exists_x_in_ball,
-  have x_in_neighbs : x ∈ get_neighbs p g := begin
-    apply get_neighbs_gets_neighbs,
-    assumption,
-  end,
-  have mdp_le_px : min_dist_pair p (get_neighbs p g) ≤ some (p, x) := begin
-    apply min_dist_pair_closest,
-    assumption,
-  end,
-  have mdp_is_some : ∃ (z w : point), min_dist_pair p (get_neighbs p g) = some (z, w) := begin
-    apply option_pt_le_some_eq_some,
-    exact mdp_le_px,
-  end,
-  apply min_dist_pair_includes_center,
-  assumption,
-end
+-- lemma pt_in_ball_mdp_is_some :
+--   ∀ (p : point) (g : grid_2D),
+--     (∃ (x : point), pt_in_ball p x g.c g.ps) →
+--     (∃ (x : point), mdp_with p g = some (p, x)) := begin
+--   intros p g exists_x_in_ball,
+--   simp [mdp_with],
+--   cases exists_x_in_ball with x exists_x_in_ball,
+--   have x_in_neighbs : x ∈ get_neighbs p g := begin
+--     apply get_neighbs_gets_neighbs,
+--     assumption,
+--   end,
+--   have mdp_le_px : min_dist_pair p (get_neighbs p g) ≤ some (p, x) := begin
+--     apply min_dist_pair_closest,
+--     assumption,
+--   end,
+--   have mdp_is_some : ∃ (z w : point), min_dist_pair p (get_neighbs p g) = some (z, w) := begin
+--     apply option_pt_le_some_eq_some,
+--     exact mdp_le_px,
+--   end,
+--   apply min_dist_pair_includes_center,
+--   assumption,
+-- end
 
 lemma get_min_dist_pair_correct :
   ∀ (p : point) (g : grid_2D),
@@ -856,10 +855,10 @@ lemma aux_finds_closest_pair_in_ball_union:
   },
 end
 
-lemma cp_in_ball_union_in_ps :
-  ∀ (c : ℕ⁺) (z w : point) (ps qs : list point),
-    closest_pair_in_ball_union c qs (some (z, w)) ps →
-    z ∈ ps := sorry
+-- lemma cp_in_ball_union_in_ps :
+--   ∀ (c : ℕ⁺) (z w : point) (ps qs : list point),
+--     closest_pair_in_ball_union c qs (some (z, w)) ps →
+--     z ∈ ps := sorry
 
 lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
   ∀ (c : ℕ⁺) (r s : point) (zw : option (point × point)) (ps qs : list point),
@@ -932,12 +931,6 @@ lemma cp_in_ball_union_closer_than_all_pts_in_dist_c :
     }
   }
 end
-
-lemma in_sublist_in_list :
-  ∀ (p : point) (ps qs : list point),
-    p ∈ ps →
-    ps ⊆ qs →
-    p ∈ qs := sorry
 
 lemma some_cp_in_balls_in_pt_list_and_neq :
   ∀ (c : ℕ⁺) (x y : point) (xy : option (point × point)) (ps : list point),
@@ -1019,10 +1012,8 @@ end
 
 lemma aux_gives_closest_pair:
   ∀ (g : grid_2D),
-    -- If there's a closest pair within distance `c`,
     (∃ (p q : point),
       cp_with_help p q g.ps g.c) →
-    -- TODO we'll need a supposition that the closest pair is within distance `c`
     (∃ (p q : point),
       aux g g.ps = some (p, q)
       ∧ closest_pair p q g.ps) := begin
@@ -1041,7 +1032,6 @@ lemma grid_pts_dot_ps_with_ps_eq_ps :
   ∀ (c : ℕ⁺) (ps : list point),
     (grid_points c ps).ps = ps := sorry
 
--- TODO see if there's a simpler way to phrase this.
 theorem find_closest_pair_correct :
   ∀ (c : ℕ⁺) (ps : list point),
     -- If there's a closest pair within distance `c`
@@ -1050,10 +1040,8 @@ theorem find_closest_pair_correct :
     -- then our algorithm finds a closest pair.
     (∃ (p q : point),
       (find_closest_pair c ps) = some (p, q) ∧
-      closest_pair p q ps) :=
-begin
+      closest_pair p q ps) := begin
   intros c ps exists_pair,
-
   have aux_gives_closest :
     (∃ (p q : point),
         aux (grid_points c ps) ps = some (p, q)
