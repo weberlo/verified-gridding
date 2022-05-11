@@ -39,7 +39,6 @@ def get_grid_idx (p : point) : grid_idx :=
 
 -- `C` is an upper bound on the closest pair distance.
 def grid_points (c : ℕ⁺) : list point → grid_2D
--- TODO need to update this function to return a structure, rather than just the hash map for the grid.
 | [] := ⟨mk_hash_map point_hash, c, []⟩
 | (x :: xs) :=
     let g := grid_points xs in

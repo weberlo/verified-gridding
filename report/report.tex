@@ -287,12 +287,12 @@ Here, we explain any notation in Table~\ref{fig:notation_summary} that was not e
 \end{center}
 \caption{Summary of notation used throughout our report}
 \end{figure}
-\todo{Could clean this table up with multitable maybe?}
-\todo{Should we use list notation for G(P, c)?}
-\todo{Swap argument order of $G$ to $G(P, c)$}
-\todo{Add list cons notation, list subset notation, and $l$ for a list and $L$ for a list of lists}
-\todo{Mark lemmas that should exist in Mathlib as blue in the diagram}
-\todo{Use $g[p]$ notation in algorithm environment}
+% \todo{Could clean this table up with multitable maybe?}
+% \todo{Should we use list notation for G(P, c)?}
+% \todo{Swap argument order of $G$ to $G(P, c)$}
+% \todo{Add list cons notation, list subset notation, and $l$ for a list and $L$ for a list of lists}
+% \todo{Mark lemmas that should exist in Mathlib as blue in the diagram}
+% \todo{Use $g[p]$ notation in algorithm environment}
 
 Most of our notation is standard or self-explanatory, so we focus on motivating the outliers.
 
@@ -389,11 +389,11 @@ However, since it will be necessary to refer to the functions we prove propertie
   Converts a point to its grid index (the identity mapping under the current set of restrictions).
   \\
   \hline
-  \texttt{min\_dist\_pair} &
+  \texttt{min\_dist\_pair\_aux} &
   $(p : \Z^2) \to (Q : [\Z^2]) \to (P \times P)^?$ &
   Given $p$ and a list of points in a ball around it, returns the closest point to $p$.  \\
   \hline
-  \texttt{mdp\_with} &
+  \texttt{min\_dist\_pair} &
   $(p : \Z^2) \to (g : \mathsf{Grid}) \to (P \times P)^?$ &
   Collects points around $p$ via \texttt{get\_neighbs}, then uses \texttt{min\_dist\_pair} to find the closest among them.
   \\
@@ -428,9 +428,7 @@ If the closest pair is within distance $(1, c]$, \texttt{find\_closest\_pair} fi
 \end{tcbtheorem}
 Figure~\ref{fig:proof_dependency} gives an overview of our proof, highlighting the results of interest and capturing the dependencies between lemmas.
 
-\todo{Somehow mark the goal lemma about find closest pair in the figure.  Can't bold it because we're already bolding the lemmas of interest.  Maybe a star?  Or big letters saying "GOAL"}
 \begin{figure}[H]
-  \label{fig:proof_dependency}
   \begin{center}
   \includegraphics[width=\linewidth]{res/proof_dependency}
   \end{center}
@@ -439,7 +437,7 @@ Figure~\ref{fig:proof_dependency} gives an overview of our proof, highlighting t
     An edge exists from $a$ to $b$ when $a$ is used by $b$ (e.g., a lemma with high in-degree uses many lemmas).
     A dashed border means the lemma has not been proven.
     A bold border means the lemma is important/interesting/difficult; we cover some of them in Section~\ref{sec:war_stories}.
-  }
+  }\label{fig:proof_dependency}
 \end{figure}
 
 \subsection{General Strategy}
@@ -452,27 +450,6 @@ Starting with Theorem~\ref{thm:main_finds_cp}, our general approach was:
 \end{enumerate}
 This kind of top-down strategy is uniquely attuned to the realm of proofs, because we only care about \textit{whether} a lemma is true---not \textit{how} it's true.
 In programming, one can stub out methods, but ultimately, to test the program, method stubs need bodies.
-
-% \subsection{Predicates}
-% \begin{center}
-% \begin{tabular} {|| c | c | c ||}
-%   \hline
-%   Predicate Name & Signature & Description \\
-%   \hline
-%   \hline
-%   \texttt{pt\_in\_ball} & & \\
-%   \hline
-%   \texttt{closest\_pair} & & \\
-%   \hline
-%   \texttt{cp\_with\_help} & & \\
-%   \hline
-%   \texttt{closest\_pair\_in\_ball\_union} & & \\
-%   \hline
-%   \texttt{in\_opt\_list} & & \\
-%   \hline
-%   % \hline
-% \end{tabular}
-% \end{center}
 
 % \begin{minted}{lean}
 % inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
@@ -512,7 +489,7 @@ But the antecedent doesn't hold for our algorithm.
 In particular, the closest pair might contain points we haven't recursed over yet.
 We can see the issue in step 3 of Figure~\ref{fig:aux_invariant} (right).
 The closest pair at this step includes a point outside the list of processed points, identifying a case where the naive invariant fails.
-\begin{figure}[H]\label{fig:aux_invariant}
+\begin{figure}[H]
   \begin{center}
   \includegraphics[width=0.5\linewidth]{res/aux_invariant}
   \end{center}
@@ -523,7 +500,7 @@ The closest pair at this step includes a point outside the list of processed poi
       Pairs satisfying the naive induction invariant, expressing that the algorithm maintains the closest pair in $P'$.
     \textbf{(Right)}
       Pairs satisfying the correct induction invariant, expressing that the algorithm maintains the closest pair in $\bigcup_{p \in P'}B_P(p, c)$.
-  }
+  }\label{fig:aux_invariant}
 \end{figure}
 We need a proof goal that provides us with a different, stronger induction hypothesis.
 Our algorithm, conceptually speaking, draws balls around each point and finds the closest pair among all balls seen so far.
@@ -567,7 +544,7 @@ For brevity, we omit discussion of the proof, though we discuss one of the lemma
 \subsubsection{Closest Pair In Ball Union Closer Than All Points Within Distance $\mathbf{c}$}
 \label{sec:cp_in_ball_union_high_level}
 In proving Lemma~\ref{lem:cp_in_ball_union_and_distance_hint}, we require the following lemma.
-\begin{tcblemma}{$\widetilde{\text{CP}}_P$ Flattening}{}
+\begin{tcblemma}{$\widetilde{\text{CP}}_P$ Flattening}{cp_in_ball_union_flattening}
   If $\widetilde{\text{CP}}_P(\mathsf{some}(x, y))$ and $q \in \bigcup_{p \in P} B_P(p, c)$, then $(x, y)$ is closer than $(p, q)$.
 \end{tcblemma}
 After staring for a bit, you might think this lemma should hold trivially\footnote{
@@ -598,7 +575,7 @@ There are two takeaways from this proof:
   Thus, it is common to prove lemmas that lift these low-level predicates to intuitive statements you can work with in other proofs.
   \item Induction on recursively defined predicates can yield stronger induction hypotheses or, at least, hypotheses that are more closely aligned with the proof goal.
 \end{itemize}
-\todo{Update CP instances in diagram to have P subscript}
+% \todo{Update CP instances in diagram to have P subscript}
 
 % \paragraph{Induction on Recursively Generated Propositions.}
 % When you have a recursively defined proposition, sometimes induction on a single index (think of it like a variable) doesn't give the right induction hypothesis.
@@ -713,147 +690,252 @@ Then, perhaps we could transport theorems from normed spaces.
 This might work, but it could also introduce a lot of overhead, where we intersperse coercions between $\Z$ and $\R$ throughout our proofs.
 
 
-\section{Statistics}
-\todo{Include statistics for number of lemmas you began proving, and maybe even proved, before realizing they weren't actually phrased correctly.}
+\subsection{Statistics}
+In this section, we compare lines of code in our implementation (Table~\ref{fig:impl_loc}) to lines of code in our verification (Table~\ref{fig:proof_loc}).
 
-\section{Ergonomics}
-Because proof assistants are so sensitive to the syntactic phrasing of concepts, it is common that creating new notation has dramatic impacts on the ergonomics of proving things.
+\begin{figure}[H]
+\begin{center}
+\begin{tabular} {|| r | l ||}
+  \hline
+  Function Name & Lines of Code \\
+  \hline
+  \hline
+  \texttt{find\_closest\_pair} & 11 \\
+  \hline
+  \texttt{aux} & 7 \\
+  \hline
+  \texttt{grid\_points} & 12 \\
+  \hline
+  \texttt{get\_grid\_idx} & 2 \\
+  \hline
+  \texttt{min\_dist\_pair\_aux} & 5 \\
+  \hline
+  \texttt{min\_dist\_pair} & 3 \\
+  \hline
+  \texttt{get\_hypercube} & 6 \\
+  \hline
+  \texttt{get\_idxs} & 5 \\
+  \hline
+  \texttt{lift\_option\_list} & 3 \\
+  \hline
+  \texttt{get\_neighbs} & 6 \\
+  \hline
+  $x\!y \leq z\!w$ & 7 \\
+  \hline
+  \hline
+  \textbf{Total} & 67 \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Breakdown of lines of code for each function in our implementation.}
+\label{fig:impl_loc}
+\end{figure}
 
-\paragraph{Example.}
-One bit of notation that has helped considerably is defining $\leq$ between point pairs that could be null.
-Because the algorithm may return no pair---either when the distance hint is wrong or there are fewer than 2 points---the type signature is naturally expressed with an \textit{optional} return type.
-In the algorithm, we want to know when the recursive result pair is closer than any pair found in the current point's ball.
-Since either of these could actually be null, we have to case on their respective nullities.
-
-\subsection{Theorem Search}
-library\_search is good
-
-\subsection{Decidable Propositions}
-The expression $p \leq q$ is a proposition, so we may be able to \textit{prove} it true.
-At the same time, for certain types of $p, q$ (e.g., $p, q \in \Z$), we have a decision procedure for the truth value of $p \leq q$, meaning we can \textit{program} with it in statements like $\text{if} p \leq q \text{then} 1 \text{else} 0$.
-Lean claims to have facilities for dissolving this dichotomy, but they are not well documented and led me through a lot of guesswork about how to use them.
-Ultimately, I made two syntactically identical definitions for $\mathsf{option} (\mathsf{point} \times \mathsf{point})$: one with a return type of $\mathsf{Prop}$ and one with a return type of $\mathsf{bool}$.
-
-\subsection{Syntax Sensitivity}
-The size of a proof depends a lot on how you've chosen to structure your code.
-If one definition in your code uses $\| p - q \|$ and another uses $\| q - p \|$, and you're trying to relate them, you will need to rewrite $\| p - q \|$ into $\| q - p \|$ via commutativity.
-Each mismatch of this sort in your code will result in an additional line in your proof, wherever the mismatched definitions need to be related.
-Each such inconsistency compounds and causes quite a large blowup in the size of proofs.
-
-There is technically automation that could make this a non-issue.
-For lemmas like commutativity, that are a workhorse of many theorems, the simplification tactic, \texttt{simp}, can be augmented to apply this lemma automatically.
-However, it seems the reductions performed by this tactic are not performed when applying a theorem or a lemma, leaving the ergonomic issue unsolved.
-% If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
-
-Here's another explanation.
-If you have a concept that's latent in your code (e.g., being the closest pair within a ball), but you haven't reified it, you might have it written as $(q \in \mathcal{B}(p, c) \cap P) \wedge (\forall x. (x \in \mathcal{B}(p, c) \cap P) \Rightarrow \| p - q \| \leq \| p - x \|)$ but you might have it commuted in another location.
-Now, every time you need to relate properties from those two locations, you need to recommute, but if you have them refactored under a definition, then you can identify them as being the same concept and express them in terms of that definition.
-\todo{Add a table mapping mathematical notation to the name of the corresponding predicate}
-\todo{Write about how unicode is nice in the ergonomics section}
-
-\subsection{Subscripts and Superscripts}
-Lean has support for a predefined set of subscripts and superscripts (e.g., mostly numbers and letters), but it's not extensible enough to handle annotation with arbitrary expressions.
-For example, summation notation like $\sum_{i=0}^{\infty}$ cannot be supported.
-
-\subsection{The Reals}
-One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
-To work with the reals, all of your definitions become uncomputable, but this doesn't need to be the case.
-
-\subsection{Rewriting Under Binders}
-If you have a theorem that says $\forall x. 2x = x + x$, then you can't directly apply it to $\forall x. 2x + 2x$ to produce $\forall x. x + x + x + x$.
-You need to start a subproof, introduce the variable $x$, apply the theorem, then close the subproof.
-
-There may be a tactic that encapsulates this use case, but that's missing the point.
-Intuitively, we should be able to rewrite under binders, and it should all be under the same \texttt{rw} tactic.
-
-\subsection{Carrying Data Only for Proofs}
-In regular programming, our grid structure should just consist of a hash table.
-However, when we need to prove properties of our grid structure, we need to carry around the list of points that generated it.
-If we need to show that the point returned by searching neighboring cells actually exists in the input list, we need the input list nearby to even state that property.
-
-Though we did not complete the proof that would require this mechanism, we believe it an interesting enough concept to bring to the attention of the reader.
-
-There's essentially a tradeoff here.
-If you want to state the properties about grids in terms of how the grid was constructed everywhere ($G(P, c)$), you can
-\begin{itemize}
-  \item You can leave properties about grids as global-level lemmas expressed as $G(P, c)$ has property $\mathcal{X}$, and this is possible because you have access to \textit{how} the grid was constructed---namely, the constructor $G(P, c)$.
-  \item You can express properties in terms of arbitrary grids $g$, but then any lemmas you require of arbitrary grids must be \textit{internalized} into the structure.
-  For example, if you wish that every $p \in P$ exists in some cell in $g.\mathsf{grid}$, a proof of this fact must be stored as a field within the grid structure.
-\end{itemize}
-Even though you and I know the only way to construct a grid is through $G(P, c)$, it's technically possible for another user to define a method that returns a grid satisfying the same type signature our grid structure has, and this grid could satisfy \textit{none} of the properties we want.
-
-These are the kinds of contingencies type theory guards against, but for the practicing programmer or mathematician, it becomes quite cumbersome to work with.
+\begin{figure}[H]
+\begin{center}
+\begin{tabular} {|| r | l ||}
+  \hline
+  Theorem/Lemma & Lines of Code \\
+  \hline
+  \hline
+  Theorem~\ref{thm:main_finds_cp} & 81 \\
+  \hline
+  Lemma~\ref{lem:aux_finds_cp} & 13 \\
+  \hline
+  Lemma~\ref{lem:aux_finds_cp_in_ball_union} & 199 \\
+  \hline
+  Lemma~\ref{lem:cp_in_ball_union_and_distance_hint} & 66 \\
+  \hline
+  Lemma~\ref{lem:cp_in_ball_union_flattening} & 71 \\
+  \hline
+  Lemma~\ref{lem:hypercube_containment} & 257 \\
+  \hline
+  Other & 446 \\
+  \hline
+  \hline
+  \textbf{Total} & 1,133 \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Breakdown of lines of code for the main results in our verification and a summary of other smaller results.}
+\label{fig:proof_loc}
+\end{figure}
+We have a startling $~17\times$ blowup in the size of our verification, relative to our implementation!
+Some of this blowup could be due to my being an experienced functional programmer but a novice in formal verification.
+As noted earlier, there are facilities in Lean that I am aware of and that could have drastically reduced the size of certain proofs, but I did not have time to investigate them.
 
 
-\subsection{Lack of Applicable Lemmas}
-Because we made the decision to use integers instead of the reals, the norm we defined is not real-valued and does not satisfy the type signature of a normed space in Mathlib.  \todo{Check this is true.}
-In principle, we could lift our norm $\| \cdot \| : \Z \to \Z$ to be real-valued $\| \cdot \|_\R : \Z \to \R$ via an inclusion.
-Then, we could prove $\| \cdot \|_\R$ is a norm, giving access to theorems for normed spaces.
-However, we would need to transport these theorems on $\| \cdot \|_\R$ back to $\| \cdot \|$, meaning we would need to mediate every theorem application with a transport theorem---a conceptually unsatisfactory solution.
+% \subsection{Predicates}
+% \begin{center}
+% \begin{tabular} {|| c | c | c ||}
+%   \hline
+%   Predicate Name & Signature & Description \\
+%   \hline
+%   \hline
+%   \texttt{pt\_in\_ball} & & \\
+%   \hline
+%   \texttt{closest\_pair} & & \\
+%   \hline
+%   \texttt{cp\_with\_help} & & \\
+%   \hline
+%   \texttt{closest\_pair\_in\_ball\_union} & & \\
+%   \hline
+%   \texttt{in\_opt\_list} & & \\
+%   \hline
+%   % \hline
+% \end{tabular}
+% \end{center}
 
-We would face the same difficulties if we chose to use the rationals, because they are also not closed under square roots.
 
-\subsection{Losing Sight of the Goal}
-Working at such a low level of abstraction and proving statements in the nitty gritty details makes it quite easy to forget why you're proving something.
-There have been multiple times where I've gotten in the zone proving something, then realized after a long struggle that the lemma actually isn't quite correct.
+% \section{Ergonomics}
+% Because proof assistants are so sensitive to the syntactic phrasing of concepts, it is common that creating new notation has dramatic impacts on the ergonomics of proving things.
 
-\subsection{Strings of Equational Reasoning}
-There is apparently a \texttt{calc} environment which facilitates this kind of equational reasoning, but in my experience, it is finnicky and is unable to infer justifications well.
+% \paragraph{Example.}
+% One bit of notation that has helped considerably is defining $\leq$ between point pairs that could be null.
+% Because the algorithm may return no pair---either when the distance hint is wrong or there are fewer than 2 points---the type signature is naturally expressed with an \textit{optional} return type.
+% In the algorithm, we want to know when the recursive result pair is closer than any pair found in the current point's ball.
+% Since either of these could actually be null, we have to case on their respective nullities.
 
-For example, if you have an expression $2 \cdot (x^2)$, and you want to rewrite $x^2$ to $x + x$, using a lemma that says $x^2 = x + x$ is not sufficient.
-You need to apply congruence to this lemma, since it doesn't apply to the \textit{entire} term $2 \cdot (x^2)$.
+% \subsection{Theorem Search}
+% library\_search is good
 
-\subsection{Without Loss of Generality}
-In proofs that are highly symmetric, except for a few steps, it is unclear how to do anything better than copy the proof for one case into the other and make the necessary tweaks.
+% \subsection{Decidable Propositions}
+% The expression $p \leq q$ is a proposition, so we may be able to \textit{prove} it true.
+% At the same time, for certain types of $p, q$ (e.g., $p, q \in \Z$), we have a decision procedure for the truth value of $p \leq q$, meaning we can \textit{program} with it in statements like $\text{if} p \leq q \text{then} 1 \text{else} 0$.
+% Lean claims to have facilities for dissolving this dichotomy, but they are not well documented and led me through a lot of guesswork about how to use them.
+% Ultimately, I made two syntactically identical definitions for $\mathsf{option} (\mathsf{point} \times \mathsf{point})$: one with a return type of $\mathsf{Prop}$ and one with a return type of $\mathsf{bool}$.
 
-To the best of my knowledge, there is no ``without loss of generality'' tactic in Lean.
-Wait a second... \href{https://leanprover-community.github.io/mathlib_docs/tactic/wlog.html}{this fucking does exist}.
+% \subsection{Syntax Sensitivity}
+% The size of a proof depends a lot on how you've chosen to structure your code.
+% If one definition in your code uses $\| p - q \|$ and another uses $\| q - p \|$, and you're trying to relate them, you will need to rewrite $\| p - q \|$ into $\| q - p \|$ via commutativity.
+% Each mismatch of this sort in your code will result in an additional line in your proof, wherever the mismatched definitions need to be related.
+% Each such inconsistency compounds and causes quite a large blowup in the size of proofs.
 
-\subsection{Coercion Hell}
-When you have lemmas that are expressed with respect to integers, but you have variables that are natural numbers, and you want to apply these lemmas, then Lean inserts coercions from $\N$ to $\Z$.
+% There is technically automation that could make this a non-issue.
+% For lemmas like commutativity, that are a workhorse of many theorems, the simplification tactic, \texttt{simp}, can be augmented to apply this lemma automatically.
+% However, it seems the reductions performed by this tactic are not performed when applying a theorem or a lemma, leaving the ergonomic issue unsolved.
+% % If the author learned how to use this automation sooner, perhaps some of this pain could have been avoided.
 
-If you have an inequality over the naturals, but you need to use it in concert with some other inequalities over integers, you need to have a lemma which says if $a \leq_{\N} b$ holds when $a,b \in \N$, then if you take the inclusion into $\Z$, $a \leq_{\Z} b$.
+% Here's another explanation.
+% If you have a concept that's latent in your code (e.g., being the closest pair within a ball), but you haven't reified it, you might have it written as $(q \in \mathcal{B}(p, c) \cap P) \wedge (\forall x. (x \in \mathcal{B}(p, c) \cap P) \Rightarrow \| p - q \| \leq \| p - x \|)$ but you might have it commuted in another location.
+% Now, every time you need to relate properties from those two locations, you need to recommute, but if you have them refactored under a definition, then you can identify them as being the same concept and express them in terms of that definition.
+% \todo{Add a table mapping mathematical notation to the name of the corresponding predicate}
+% \todo{Write about how unicode is nice in the ergonomics section}
 
-And you need to have ``coercions preserve $(\leq \mid < \mid > \mid \geq)$'' for all of the different relations, so you can transport results across coercions.
+% \subsection{Subscripts and Superscripts}
+% Lean has support for a predefined set of subscripts and superscripts (e.g., mostly numbers and letters), but it's not extensible enough to handle annotation with arbitrary expressions.
+% For example, summation notation like $\sum_{i=0}^{\infty}$ cannot be supported.
 
-These kinds of issues became a huge pain when I had to prove that \texttt{get\_neighbs} fetches all points within distance $c$ from the center point $p$.
+% \subsection{The Reals}
+% One of the chief reasons we cannot answer that formal verification is easy is because of the complicated relationship modern proof assistants still have with the reals.
+% To work with the reals, all of your definitions become uncomputable, but this doesn't need to be the case.
 
-This blocks a lot of proof automation, because you may have coercions sprinkled throughout your context
+% \subsection{Rewriting Under Binders}
+% If you have a theorem that says $\forall x. 2x = x + x$, then you can't directly apply it to $\forall x. 2x + 2x$ to produce $\forall x. x + x + x + x$.
+% You need to start a subproof, introduce the variable $x$, apply the theorem, then close the subproof.
 
-I also defined a separate type $\N^+$ for positive numbers, and I defined an associated coercion to $\N$.
+% There may be a tactic that encapsulates this use case, but that's missing the point.
+% Intuitively, we should be able to rewrite under binders, and it should all be under the same \texttt{rw} tactic.
 
-\subsection{Thinking in Terms of Induction}
-We're all familiar with proofs by induction, but likely not to the degree in which they're emphasized in proof assistants.
-To the formal verification expert or formal mathematician, induction is the workhorse of everything they do.
+% \subsection{Carrying Data Only for Proofs}
+% In regular programming, our grid structure should just consist of a hash table.
+% However, when we need to prove properties of our grid structure, we need to carry around the list of points that generated it.
+% If we need to show that the point returned by searching neighboring cells actually exists in the input list, we need the input list nearby to even state that property.
+
+% Though we did not complete the proof that would require this mechanism, we believe it an interesting enough concept to bring to the attention of the reader.
+
+% There's essentially a tradeoff here.
+% If you want to state the properties about grids in terms of how the grid was constructed everywhere ($G(P, c)$), you can
+% \begin{itemize}
+%   \item You can leave properties about grids as global-level lemmas expressed as $G(P, c)$ has property $\mathcal{X}$, and this is possible because you have access to \textit{how} the grid was constructed---namely, the constructor $G(P, c)$.
+%   \item You can express properties in terms of arbitrary grids $g$, but then any lemmas you require of arbitrary grids must be \textit{internalized} into the structure.
+%   For example, if you wish that every $p \in P$ exists in some cell in $g.\mathsf{grid}$, a proof of this fact must be stored as a field within the grid structure.
+% \end{itemize}
+% Even though you and I know the only way to construct a grid is through $G(P, c)$, it's technically possible for another user to define a method that returns a grid satisfying the same type signature our grid structure has, and this grid could satisfy \textit{none} of the properties we want.
+
+% These are the kinds of contingencies type theory guards against, but for the practicing programmer or mathematician, it becomes quite cumbersome to work with.
+
+
+% \subsection{Lack of Applicable Lemmas}
+% Because we made the decision to use integers instead of the reals, the norm we defined is not real-valued and does not satisfy the type signature of a normed space in Mathlib.  \todo{Check this is true.}
+% In principle, we could lift our norm $\| \cdot \| : \Z \to \Z$ to be real-valued $\| \cdot \|_\R : \Z \to \R$ via an inclusion.
+% Then, we could prove $\| \cdot \|_\R$ is a norm, giving access to theorems for normed spaces.
+% However, we would need to transport these theorems on $\| \cdot \|_\R$ back to $\| \cdot \|$, meaning we would need to mediate every theorem application with a transport theorem---a conceptually unsatisfactory solution.
+
+% We would face the same difficulties if we chose to use the rationals, because they are also not closed under square roots.
+
+% \subsection{Losing Sight of the Goal}
+% Working at such a low level of abstraction and proving statements in the nitty gritty details makes it quite easy to forget why you're proving something.
+% There have been multiple times where I've gotten in the zone proving something, then realized after a long struggle that the lemma actually isn't quite correct.
+
+% \subsection{Strings of Equational Reasoning}
+% There is apparently a \texttt{calc} environment which facilitates this kind of equational reasoning, but in my experience, it is finnicky and is unable to infer justifications well.
+
+% For example, if you have an expression $2 \cdot (x^2)$, and you want to rewrite $x^2$ to $x + x$, using a lemma that says $x^2 = x + x$ is not sufficient.
+% You need to apply congruence to this lemma, since it doesn't apply to the \textit{entire} term $2 \cdot (x^2)$.
+
+% \subsection{Without Loss of Generality}
+% In proofs that are highly symmetric, except for a few steps, it is unclear how to do anything better than copy the proof for one case into the other and make the necessary tweaks.
+
+% To the best of my knowledge, there is no ``without loss of generality'' tactic in Lean.
+% Wait a second... \href{https://leanprover-community.github.io/mathlib_docs/tactic/wlog.html}{this fucking does exist}.
+
+% \subsection{Coercion Hell}
+% When you have lemmas that are expressed with respect to integers, but you have variables that are natural numbers, and you want to apply these lemmas, then Lean inserts coercions from $\N$ to $\Z$.
+
+% If you have an inequality over the naturals, but you need to use it in concert with some other inequalities over integers, you need to have a lemma which says if $a \leq_{\N} b$ holds when $a,b \in \N$, then if you take the inclusion into $\Z$, $a \leq_{\Z} b$.
+
+% And you need to have ``coercions preserve $(\leq \mid < \mid > \mid \geq)$'' for all of the different relations, so you can transport results across coercions.
+
+% These kinds of issues became a huge pain when I had to prove that \texttt{get\_neighbs} fetches all points within distance $c$ from the center point $p$.
+
+% This blocks a lot of proof automation, because you may have coercions sprinkled throughout your context
+
+% I also defined a separate type $\N^+$ for positive numbers, and I defined an associated coercion to $\N$.
+
+% \subsection{Thinking in Terms of Induction}
+% We're all familiar with proofs by induction, but likely not to the degree in which they're emphasized in proof assistants.
+% To the formal verification expert or formal mathematician, induction is the workhorse of everything they do.
 
 \section{Conclusion}
-We are forced to the conclusion that the average programmer can continue to disregard formal verification, and formal verification should only be employed for the most critical components of digital infrastructure.
+While the existence of Mathlib alleviates the burden of proving basic facts about mathematical objects, the constructions necessary to prove correctness of algorithms are often as complex or more than constructions in mathematics, and they are far more bespoke.
+With all the diversity in algorithms across computer science, formal verification of a particular implementation of a particular algorithm is a tough sell.
 
-\paragraph{Benefits.}
-Verification encourages you to write \textbf{very} clean code and develop concepts/notation that is natural for the algorithm.
-There were multiple match statements in the main body originally, casing on whether we received a point in the current point's ball.
-The cleaner alternative was to lift operations on pairs of points to operate on \textit{nullable} pairs of points.
-As a result, the main body of our algorithm is now only 6 lines long.
+We are led to the conclusion that, until a breakthrough in proof automation is achieved or we discover new abstractions for mathematical construction of software, the average computational geometer, and the average programmer, can continue to disregard formal verification.
+Despite my lack of expertise in formal verification, the broad strokes of the picture are clear: the level of formality that verification entails leads to reasoning far below the level of abstraction computer scientists care to think at.
+% Lean is perhaps best suited to the formalization of mathematics.
 
-Proof assistants implicitly enforce the software engineering principle that every function should do exactly one thing.
-Originally, the core function \texttt{aux} iterated over the list of points, and in the recursive body, it checked all points in the hypercube of radius $\sqrt{c}^\Z$.
 
-When you have multiple iterations within a method, it often corresponds to nested induction.
-\todo{It's not super clear here, because the get\_neighbs function uses folds and maps, so it's not directly iterating and I'm not sure whether you need induction to prove facts about those}
-Proofs on this function would have required induction (probably).
-Induction is one way of linearizing our reasoning, so it almost corresponds to the statement that you should have every function be linear in one variable or something like that.
-\todo{Emphasize somewhere the sheer number of induction proofs you need in proof assistants, and how it's all just induction.}
 
-In many ways, formal verification is not unlike the process of writing proofs in mathematics broadly.
-There is a vague intuition why something is true, and all that's missing is the right language to express it.
-The process is less satisfying though, because the theorems don't speak the same truths of the world that they do in math, and it makes one question whether the process was worth it.
+% When mathematics and programming are put on equal foundations (i.e., type theory), as they are in Lean, it becomes clear that the constructs in algorithms are often as complex (or more) than constructions in mathematics, and they are far more bespoke.
 
-It feels like fighting Hydra of Lerna.
+% and formal verification should only be employed for the most critical components of digital infrastructure.
 
-\paragraph{Alternative Ending.}
-Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.
-The simpler functions in your algorithm can be left with their lemmas unproven.
-Proof assistants can provide a conceptual framework to verify the high-level components of your algorithm and tame the uncertainty there.
+% \paragraph{Benefits.}
+% Verification encourages you to write \textbf{very} clean code and develop concepts/notation that is natural for the algorithm.
+% There were multiple match statements in the main body originally, casing on whether we received a point in the current point's ball.
+% The cleaner alternative was to lift operations on pairs of points to operate on \textit{nullable} pairs of points.
+% As a result, the main body of our algorithm is now only 6 lines long.
+
+% Proof assistants implicitly enforce the software engineering principle that every function should do exactly one thing.
+% Originally, the core function \texttt{aux} iterated over the list of points, and in the recursive body, it checked all points in the hypercube of radius $\sqrt{c}^\Z$.
+
+% When you have multiple iterations within a method, it often corresponds to nested induction.
+% \todo{It's not super clear here, because the get\_neighbs function uses folds and maps, so it's not directly iterating and I'm not sure whether you need induction to prove facts about those}
+% Proofs on this function would have required induction (probably).
+% Induction is one way of linearizing our reasoning, so it almost corresponds to the statement that you should have every function be linear in one variable or something like that.
+% \todo{Emphasize somewhere the sheer number of induction proofs you need in proof assistants, and how it's all just induction.}
+
+% In many ways, formal verification is not unlike the process of writing proofs in mathematics broadly.
+% There is a vague intuition why something is true, and all that's missing is the right language to express it.
+% The process is less satisfying though, because the theorems don't speak the same truths of the world that they do in math, and it makes one question whether the process was worth it.
+
+% It feels like fighting Hydra of Lerna.
+
+% \paragraph{Alternative Ending.}
+% Perhaps full formal verification is unnecessary, but perhaps a hybrid strategy can be employed.
+% The simpler functions in your algorithm can be left with their lemmas unproven.
+% Proof assistants can provide a conceptual framework to verify the high-level components of your algorithm and tame the uncertainty there.
 
 \bibliographystyle{plain}
 \bibliography{references}
