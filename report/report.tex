@@ -62,11 +62,6 @@ loganweb@mit.edu
 
 \tableofcontents
 
-% \section{TODOs}
-Recall, Piotyr said what's most useful for him is statistics (breakdowns of code vs. proof) and ``war stories''.
-
-Link to Github repo.
-
 \section{Introduction}
 In the past few years, the Lean theorem prover and programming language has caught the attention of the math community.
 For a long time, proof assistants were thought of as unsatisfactory for formalizing undergraduate-level mathematics, let alone \textit{research}-level mathematics.
@@ -99,11 +94,11 @@ The question I seek to answer is: how much of the proof burden does Mathlib alle
 % He replied with an anecdote that a student once tried to formally verify an algorithm in his class.
 % The author took this as a challenge and decided to assess the current state of formal verification, given the existence of libraries like Mathlib.
 
-The concrete goal I set out with on this project was to implement and formally verify the closest pair (with help) and helper finder algorithms.
+% My background is not in formal verification, but I do have a background in programming languages broadly.
+% As someone who has been skeptical of the efficacy of verification, part of my goal with this project is to give perspective to outsiders and tell them what they should expect, without sugar-coating it and saying ``you'll get used to it''.
 
-My background is not in formal verification, but I do have a background in programming languages broadly.
-As someone who has been skeptical of the efficacy of verification, part of my goal with this project is to give perspective to outsiders and tell them what they should expect, without sugar-coating it and saying ``you'll get used to it''.
 
+The concrete goal we set out with on this project was to implement and formally verify the closest pair (with help) and helper finder algorithms.
 Our final achievements were
 \footnote{
   Code can be found at \href{https://github.com/weberlo/verified-gridding}{https://github.com/weberlo/verified-gridding}.
@@ -111,7 +106,7 @@ Our final achievements were
 \todo{Make it like a TODO list with checkmarks on things we completed}
 \begin{itemize}
   \item An implementation for a restricted form of the closest pair (with help) problem.
-  \item A ``broad strokes'' verification of the algorithm, with many low-level lemmas assumed to be true.
+  \item A partial verification of the algorithm, with some low-level lemmas assumed to be true.
 \end{itemize}
 
 \todo{Do some fenceposting}
@@ -360,10 +355,13 @@ When we don't have access to the parameters a grid was constructed with, we nota
 % We won't waste much breath on the implementation.
 
 \section{Verification}
-\todo{Give top-down proof strategy spiel}
+We omit any detailed explanation of our implementation, since that was not the difficult part.
+However, since it will be necessary to refer to the functions we prove properties of, we summarize our implementation in Table~\ref{fig:impl_table}.
 
-\subsection{Code Structure}
-\todo{Try to assign mathematical notation to each of these}
+
+% \subsection{Code Structure}
+\begin{figure}
+\label{fig:impl_table}
 \begin{center}
 \begin{tabular} {|| r | l | p{5cm} ||}
   \hline
@@ -386,6 +384,11 @@ When we don't have access to the parameters a grid was constructed with, we nota
   $(P : [\Z^2]) \to (c : \N^+) \to \mathsf{Grid}$ &
   Creates the grid structure, inserting points according to \texttt{get\_grid\_idx}. \\
   \hline
+  \texttt{get\_grid\_idx} &
+  $(p : \Z^2) \to \Z^2$ &
+  Converts a point to its grid index (the identity mapping under the current set of restrictions).
+  \\
+  \hline
   \texttt{min\_dist\_pair} &
   $(p : \Z^2) \to (Q : [\Z^2]) \to (P \times P)^?$ &
   Given $p$ and a list of points in a ball around it, returns the closest point to $p$.  \\
@@ -395,38 +398,39 @@ When we don't have access to the parameters a grid was constructed with, we nota
   Collects points around $p$ via \texttt{get\_neighbs}, then uses \texttt{min\_dist\_pair} to find the closest among them.
   \\
   \hline
-  \texttt{get\_grid\_idx} &
-  $(p : \Z^2) \to \Z^2$ &
-  \\
-  \hline
   \texttt{get\_hypercube} &
   $(n : \N) \to [\Z^2]$ &
+  Given a radius $n$, returns the set of grid cell indices that intersect a hypercube of radius $n$.
   \\
   \hline
   \texttt{get\_idxs} &
   $(p : \Z^2) \to (c : \N^+) \to [\Z^2]$ &
+  Returns a list of indices in a hypercube of radius $\sqrt{c}^\N + 1$ around $p$, making use of \texttt{get\_hypercube}.
   \\
   \hline
   \texttt{lift\_option\_list} &
-  $\forall (\alpha : \mathsf{Type}).\, [\alpha]^? \to [\alpha]$
-  &
-  \\
+  $\forall (\alpha : \mathsf{Type}).\, [\alpha]^? \to [\alpha]$ &
+  Converts all $\mathsf{none}$ lists into empty lists.  \\
   \hline
   \texttt{get\_neighbs} &
   $(p : \Z^2) \to (g : \mathsf{Grid}) \to [\Z^2]$ &
+  Uses \texttt{get\_idxs} to collect indices around $p$, then fetches cells at those indices from $g$, excludes $p$ from the result, then returns.
   \\
   \hline
 \end{tabular}
 \end{center}
+\end{figure}
 
 
 The goal of our verification is to prove the following theorem.
 \begin{tcbtheorem}{{\large\texttt{find\_closest\_pair}} Finds Closest Pair}{main_finds_cp}
 If the closest pair is within distance $(1, c]$, \texttt{find\_closest\_pair} finds $(x, y)$ such that $\text{CP}_P(x, y)$.
 \end{tcbtheorem}
+Figure~\ref{fig:proof_dependency} gives an overview of our proof, highlighting the results of interest and capturing the dependencies between lemmas.
 
 \todo{Somehow mark the goal lemma about find closest pair in the figure.  Can't bold it because we're already bolding the lemmas of interest.  Maybe a star?  Or big letters saying "GOAL"}
 \begin{figure}[H]
+  \label{fig:proof_dependency}
   \begin{center}
   \includegraphics[width=\linewidth]{res/proof_dependency}
   \end{center}
@@ -434,31 +438,41 @@ If the closest pair is within distance $(1, c]$, \texttt{find\_closest\_pair} fi
     Graph capturing the dependency of each lemma/theorem on other lemmas.
     An edge exists from $a$ to $b$ when $a$ is used by $b$ (e.g., a lemma with high in-degree uses many lemmas).
     A dashed border means the lemma has not been proven.
-    A bold border means the lemma is important/interesting/difficult, and we cover it in Section~\ref{sec:war_stories}.
+    A bold border means the lemma is important/interesting/difficult; we cover some of them in Section~\ref{sec:war_stories}.
   }
 \end{figure}
 
+\subsection{General Strategy}
+Starting with Theorem~\ref{thm:main_finds_cp}, our general approach was:
+\begin{enumerate}
+  \item Work through the proof.
+  \item Each time it seems you need a lemma pertaining to another function, create an empty definition for that lemma, assuming it to be true.
+  The lemma can now be used in the main proof.
+  \item When the proof is finished, choose one of the posited lemmas and repeat this process.
+\end{enumerate}
+This kind of top-down strategy is uniquely attuned to the realm of proofs, because we only care about \textit{whether} a lemma is true---not \textit{how} it's true.
+In programming, one can stub out methods, but ultimately, to test the program, method stubs need bodies.
 
-\subsection{Predicates}
-\begin{center}
-\begin{tabular} {|| c | c | c ||}
-  \hline
-  Predicate Name & Signature & Description \\
-  \hline
-  \hline
-  \texttt{pt\_in\_ball} & & \\
-  \hline
-  \texttt{closest\_pair} & & \\
-  \hline
-  \texttt{cp\_with\_help} & & \\
-  \hline
-  \texttt{closest\_pair\_in\_ball\_union} & & \\
-  \hline
-  \texttt{in\_opt\_list} & & \\
-  \hline
-  % \hline
-\end{tabular}
-\end{center}
+% \subsection{Predicates}
+% \begin{center}
+% \begin{tabular} {|| c | c | c ||}
+%   \hline
+%   Predicate Name & Signature & Description \\
+%   \hline
+%   \hline
+%   \texttt{pt\_in\_ball} & & \\
+%   \hline
+%   \texttt{closest\_pair} & & \\
+%   \hline
+%   \texttt{cp\_with\_help} & & \\
+%   \hline
+%   \texttt{closest\_pair\_in\_ball\_union} & & \\
+%   \hline
+%   \texttt{in\_opt\_list} & & \\
+%   \hline
+%   % \hline
+% \end{tabular}
+% \end{center}
 
 % \begin{minted}{lean}
 % inductive closest_pair_in_balls (c : ℕ⁺) (qs : list point) :
@@ -609,77 +623,91 @@ There are two takeaways from this proof:
 \subsubsection{Bounded Norm $\Rightarrow$ In $\ell_\infty$ Ball}
 On the path to proving Lemma~\ref{lem:aux_finds_cp_in_ball_union}, we need lemmas showing that we check the correct grid indices.
 The lemma below says that if the distance between two points is bounded, then checking in a hypercube of a certain radius around one of them suffices to find one of the points.
-\begin{tcblemma}{Hypercube Containment for Bounded Norm}{}
+\begin{tcblemma}{Hypercube Containment for Bounded Norm}{hypercube_containment}
   If $\|(a, b)\| \leq c$, then $(a, b) \in \texttt{get\_hypercube}(\sqrt{c}^\N + 1)$.
 \end{tcblemma}
 There's nothing conceptually tricky about this lemma.
-However, it turned out to be an absolute pain to prove in Lean.
+However, the approach that felt natural made it an absolute pain to prove in Lean.
 
-We first break down the proof goal with a lemma showing it suffices to prove
+We first broke down the proof goal with a lemma showing it suffices to prove
 \[ -\coerce{\sqrt{c}^\N + 1}{\Z} \leq a, b \leq \coerce{\sqrt{c}^\N + 1}{\Z}. \]
 Recall, $\coerce{n}{\Z}$ represents a coercion of $n \in \N$ into an integer.
-This coercion is a trivial inclusion, but we were unable to convince Lean of this simple fact.
+This coercion is a trivial inclusion, but even so, it obstructed the application of lemmas, because Lean doesn't know which properties the coercions preserve.
 
-We now focus on just $-\coerce{\sqrt{c}^\N + 1}{\Z} \leq a$.
+To get around these obstructions, we separately proved that relations like $<, \leq, >$, and $\geq$ were preserved by coercion, applied those lemmas, then applied the previously obstructed lemma.
+The proofs of preservation were trivial, but requiring the separate proofs still added friction to the process.
+
+We now focus on proving only $-\coerce{\sqrt{c}^\N + 1}{\Z} \leq a$.
 The other cases are similar.
-
- one side of the inequalities and just one of the variables
-
-We then proceed by contradiction, giving us the hypothesis that
+We proceed by contradiction, giving us the hypothesis that
 $\neg(-\coerce{\sqrt{c}^\N + 1}{\Z} \leq a)$.
 To get this into the more useful form $a < -\coerce{\sqrt{c}^\N + 1}{\Z}$ required 4 lines of code.
 
+We then used lemmas to establish the following facts, with later facts potentially depending on earlier ones:
+\begin{itemize}
+  \item $a^2 \leq c$ and $b^2 \leq c$
+  \item $\sqrt{c}^\N + 1 \geq 0$
+  \item $-(\coerce{\coerce{\sqrt{c}^\N}{\N} + 1}{\Z} \leq 0$
+  \item $a \leq -(\sqrt{c}^\N + 1)$
+  \item $-(\coerce{\sqrt{c}^\N}{\N} + 1) \cdot -(\coerce{\sqrt{c}^\N}{\N} + 1) < a^2$
+  \item $(-a)^2 = a^2$
+  \item $(\sqrt{c}^\N + 1)^2 > c$
+  \item $\coerce{\sqrt{c}^\N}{\Z} < a^2$
+\end{itemize}
+With the final fact, we were able to prove a contradiction by using the lemma $\neg(x \leq y \wedge y < x)$ applied to $a^2 \leq c$ and $\coerce{\sqrt{c}^\N}{\Z} < a^2$.
 
 Recall, we have only proven a portion of the original proof goal, and we stated the other three cases were similar.
 To prove the other cases, we copied the first case three times and made slight modifications.
 We did not sink much time into it, but in the time we did spend, it was nonobvious how to do anything better.
 
-% \uparrow^{\mathbb{Z}}\!\!
+We have no doubts there are tactics that could make the proof above less painful.
+The takeaway from this story is that a clean proof did not seem attainable from \textit{basic} usage of Lean.
 
 \paragraph{Potential Improvements.}
-TODO include WLOG tactic
-TODO maybe I've been using the calc env wrong
+There exists a \texttt{wlog} tactic that captures the informal concept of WLOG often used in proofs, by considering permutations of variables in the proof goal.
+This tactic could potentially reduce the code duplication across the four cases.
 
+There exists a \texttt{calc} mode that is able to perform chains of inequality reasoning, which could dramatically condense the proof of Lemma~\ref{lem:hypercube_containment}.
+However, we were unable to get it to work in the simple cases we tried.
 
-I think the takeaway from this case will be that proofs involving inequalities are fundamentally more difficult for proof assistants to automate.
-This is because there is an added degree of freedom in how the proof assistant can choose to instantiate lemmas.
-\todo{There should be some intuitive example we can give that motivate this difficulty}
+% I think the takeaway from this case will be that proofs involving inequalities are fundamentally more difficult for proof assistants to automate.
+% This is because there is an added degree of freedom in how the proof assistant can choose to instantiate lemmas.
+% \todo{There should be some intuitive example we can give that motivate this difficulty}
 
-It could explain why Mathlib lacks theorems in analysis.
+% It could explain why Mathlib lacks theorems in analysis.
 
 \subsection{Admitted Lemmas}
-\subsubsection{Likely Existing in Mathlib.}
-The author believes most admitted lemmas about the integers can be mapped onto existing proofs in Mathlib.
+Almost all of the lemmas we did not prove were unique to the machinery we set up for the closest pair algorithm.
+Most of the admitted lemmas were simply due to time constraints.
+Below, we discuss a few notable classes of admitted lemmas.
 
-Examples:
-\begin{itemize}
-  \item An integer cannot be simultaneously smaller and larger than another integer.
-  \item If an integer is not smaller or larger than another integer, then they are equal.
-  \item Adding nonnegative integers is nonnegative.
-\end{itemize}
+% \subsubsection{Not Existing in Mathlib}
+% \paragraph{Closest Pair.}
+% Examples:
+% \begin{itemize}
+%   \item If there's a closest pair, then the set of points is nonempty.
+%   \item If the closest pair is at least distance 1 apart, then all points are at least distance 1 apart.
+%   \item Finding all cells intersecting a hypercube of radius $\sqrt{c}$ finds all points in a ball of radius $c$.
+%   \item Given a list of points, we can find the closest point to a distinguished point.
+% \end{itemize}
 
-\subsubsection{Not Existing in Mathlib}
-\paragraph{Closest Pair.}
-Examples:
-\begin{itemize}
-  \item If there's a closest pair, then the set of points is nonempty.
-  \item If the closest pair is at least distance 1 apart, then all points are at least distance 1 apart.
-  \item Finding all cells intersecting a hypercube of radius $\sqrt{c}$ finds all points in a ball of radius $c$.
-  \item Given a list of points, we can find the closest point to a distinguished point.
-\end{itemize}
+\paragraph{Comparisons In $(P \times P)^?$.}
+In defining the comparison predicates $x\!y \leq z\!w$ and $x\!y < z\!w$ between pairs of points, we did not automatically gain access to lemmas on linear orders.
+We believe if we proved that it forms a linear order, then we would gain access to a number of theorems in Mathlib that would be helpful in some of the admitted proofs.
 
 \paragraph{Norm.}
 % TODO we haven't `admit`ted everything in this section
 % TODO need a different name than `point_norm'.
 We can't directly leverage the infrastructure and theorems surrounding normed spaces, because the norm typeclass requires a codomain of $\R$, destroying computability properties.
-Thus, we admit the following lemmas:
-\begin{itemize}
-  \item The point norm is commutative.
-\end{itemize}
-Thus, we prove the following lemmas:
-\begin{itemize}
-  \item The point norm is nonnegative.
-\end{itemize}
+
+% Thus, we admit the following lemmas:
+% \begin{itemize}
+%   \item The point norm is commutative.
+% \end{itemize}
+% Thus, we prove the following lemmas:
+% \begin{itemize}
+%   \item The point norm is nonnegative.
+% \end{itemize}
 In principle, a norm instance could be provided whereby the output would be lifted from $\Z$ to $\R$.
 Then, perhaps we could transport theorems from normed spaces.
 This might work, but it could also introduce a lot of overhead, where we intersperse coercions between $\Z$ and $\R$ throughout our proofs.

@@ -140,7 +140,6 @@ lemma coe_preserves_ge :
     a ≥ b →
     (↑a : ℤ) ≥ ↑b := begin
   intros a b h,
-  simp [h],
   linarith,
 end
 

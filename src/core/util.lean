@@ -1,4 +1,9 @@
 import data.nat.basic
+import data.rat.basic
+import data.real.basic
+import data.real.sqrt
+import data.rat.sqrt
+import analysis.normed.group.basic
 
 structure pos_nat :=
   (val : ℕ)
@@ -10,7 +15,8 @@ instance : has_coe ℕ⁺ ℕ :=
 lemma coe_to_ℕ_then_ℤ_eq_coe_to_ℤ :
   ∀ (n : ℕ⁺),
     (↑(↑n : ℕ) : ℤ) = (↑n : ℤ) := begin
-  sorry
+  intros n,
+  simp,
 end
 
 
@@ -21,7 +27,8 @@ lemma add_nonzero_nonzero :
     m > 0 →
     n > 0 →
     m + n > 0 := begin
-  sorry
+  intros m n h1 h2,
+  linarith,
 end
 
 instance : has_mul ℕ⁺ := ⟨λ m n,
